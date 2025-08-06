@@ -4,6 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,7 +34,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import org.publicvalue.multiplatform.qrcode.CameraPosition
 import org.publicvalue.multiplatform.qrcode.ScannerWithPermissions
 import androidx.compose.ui.draw.clipToBounds
@@ -150,24 +160,62 @@ fun BasePersonnelInfo() {
             .padding(16.dp)
     ) {
         Spacer(modifier = Modifier.height(16.dp))
-        StringFormInputField("姓名")
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            GenderChooseFormInputField("性别", modifier = Modifier.weight(1f))
-            Spacer(modifier = Modifier.width(16.dp))
-            NumberFormInputField("年龄", modifier = Modifier.weight(1f))
+        ExpandableWrapControl(title = "人员信息") {
+            StringFormInputField("姓名")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                GenderChooseFormInputField("性别", modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.width(8.dp))
+                NumberFormInputField("年龄", modifier = Modifier.weight(1f))
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            StringFormInputField("部别")
+            Spacer(modifier = Modifier.height(8.dp))
+            StringFormInputField("职务")
+            Spacer(modifier = Modifier.height(8.dp))
+            StringFormInputField("地点")
+            Spacer(modifier = Modifier.height(8.dp))
+            DateChooseFormInputField("时间")
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        StringFormInputField("部别")
-        Spacer(modifier = Modifier.height(8.dp))
-        StringFormInputField("职务")
-        Spacer(modifier = Modifier.height(8.dp))
-        StringFormInputField("地点")
-        Spacer(modifier = Modifier.height(8.dp))
-        DateChooseFormInputField("时间")
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("其他信息")
+    }
+}
+
+@Composable
+fun ExpandableWrapControl(
+    modifier: Modifier = Modifier,
+    title: String = "Expandable Content",
+    initiallyExpanded: Boolean = false,
+    content: @Composable () -> Unit
+) {
+    var expanded by remember { mutableStateOf(initiallyExpanded) }
+
+    Column(modifier = modifier.animateContentSize()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = !expanded }
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = title, style = MaterialTheme.typography.titleMedium)
+            Icon(
+                imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                contentDescription = if (expanded) "Collapse" else "Expand"
+            )
+        }
+
+        AnimatedVisibility(visible = expanded) {
+            // todo: 之后用 FlowRow 之类的玩意，要装依赖所以我懒了
+            Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)) {
+                content()
+            }
+        }
     }
 }
 
