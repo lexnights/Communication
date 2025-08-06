@@ -39,6 +39,7 @@ android {
     }
 }
 
+val material3Version = "1.3.2"
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -50,6 +51,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation("io.github.kalinjul.easyqrscan:scanner:0.4.0")
+    implementation("androidx.compose.material3:material3:${material3Version}")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
