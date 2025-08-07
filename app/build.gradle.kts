@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+
+    kotlin("plugin.serialization") version "2.2.0"
 }
 
 android {
@@ -52,6 +54,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation("io.github.kalinjul.easyqrscan:scanner:0.4.0")
     implementation("androidx.compose.material3:material3:${material3Version}")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
