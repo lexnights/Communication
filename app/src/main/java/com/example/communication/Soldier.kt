@@ -7,7 +7,7 @@ import kotlinx.serialization.json.Json
 @Serializable
 data class Soldier(
     private var name: String? = null,
-    private var sex: Boolean = false,
+    private var gender: Boolean = false,
     private var age: Int = 0,
     private var department: String? = null,
     private var job: String? = null, //职位
@@ -49,8 +49,8 @@ data class Soldier(
     fun Soldier.getName(): String? {
         return name
     }
-    fun Soldier.getSex(): Boolean {
-        return sex
+    fun Soldier.getGender(): Boolean {
+        return gender
     }
     fun Soldier.getAge(): Int {
         return age
@@ -153,5 +153,113 @@ data class Soldier(
     }
     fun Soldier.getSurgeon(): String? {
         return surgeon
+    }
+    fun Soldier.setName(name: String) {
+        this.name = name
+    }
+    fun Soldier.setGender(gender: Boolean) {
+        this.gender = gender
+    }
+    fun Soldier.setAge(age: Int) {
+        this.age = age
+    }
+    fun Soldier.setDepartment(department: String) {
+        this.department = department
+    }
+    fun Soldier.setJob(job: String) {
+        this.job = job
+    }
+    fun Soldier.setRank(rank: String) {
+        this.rank = rank
+    }
+    fun Soldier.setPlace(place: String) {
+        this.place = place
+    }
+    fun Soldier.setHurtTime(hurtTime: String) {
+        this.hurtTime = hurtTime
+    }
+    fun Soldier.setArriveTime(arriveTime: String) {
+        this.arriveTime = arriveTime
+    }
+    fun Soldier.setEmergencyTreatment(emergencyTreatment: Boolean) {
+        this.emergencyTreatment = emergencyTreatment
+    }
+    fun Soldier.setRadioactive(radioactive: Boolean) {
+        this.radioactive = radioactive
+    }
+    fun Soldier.setIsolation(isolation: Boolean) {
+        this.isolation = isolation
+    }
+    fun Soldier.setPoison(poison: Boolean) {
+        this.poison = poison
+    }
+    fun Soldier.setType(type: Boolean) {
+        this.type = type
+    }
+    fun Soldier.setAid(aid: String) {
+        this.aid = aid
+    }
+    fun Soldier.setInjuredArea(injuredArea: Array<String>) {
+        this.injuredArea = injuredArea
+    }
+    fun Soldier.setInjuredType(injuredType: Array<String>) {
+        this.injuredType = injuredType
+    }
+    fun Soldier.setInjuredCondition(injuredCondition: Array<String>) {
+        this.injuredCondition = injuredCondition
+    }
+    fun Soldier.setWoundType(woundType: Array<String>) {
+        this.woundType = woundType
+    }
+    fun Soldier.setInjuredSeverity(injuredSeverity: String) {
+        this.injuredSeverity = injuredSeverity
+    }
+    fun Soldier.setToxoid(toxoid: Int) {
+        this.toxoid = toxoid
+    }
+    fun Soldier.setTetanus(tetanus: Int) {
+        this.tetanus = tetanus
+    }
+    fun Soldier.setInjectedDrugs(injectedDrugs: Map<String, Int>) {
+        this.injectedDrugs = injectedDrugs
+    }
+    fun Soldier.setTransfusion(transfusion: Pair<String, Int>) {
+        this.transfusion = transfusion
+    }
+    fun Soldier.setInjection(injection: Pair<String, Int>) {
+        this.injection = injection
+    }
+    fun Soldier.setPainkillers(painkillers: Triple<String, Int, String>) {
+        this.painkillers = painkillers
+    }
+    fun Soldier.setOxygenInhalation(oxygenInhalation: Boolean) {
+        this.oxygenInhalation = oxygenInhalation
+    }
+    fun Soldier.setAntiShockPants(antiShockPants: Boolean) {
+        this.antiShockPants = antiShockPants
+    }
+    fun Soldier.setShockOther(shockOther: String) {
+        this.shockOther = shockOther
+    }
+    fun Soldier.setEmergencySurgery(emergencySurgery: Array<String>) {
+        this.emergencySurgery = emergencySurgery
+    }
+    fun Soldier.setTime(time: String) {
+        this.time = time
+    }
+    fun Soldier.setDestination(destination: String) {
+        this.destination = destination
+    }
+    fun Soldier.setVehicle(vehicle: String) {
+        this.vehicle = vehicle
+    }
+    fun Soldier.setPosition(position: String) {
+        this.position = position
+    }
+    fun Soldier.setFillDepartment(fillDepartment: String) {
+        this.fillDepartment = fillDepartment
+    }
+    fun Soldier.setSurgeon(surgeon: String) {
+        this.surgeon = surgeon
     }
 }
