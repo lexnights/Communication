@@ -30,7 +30,7 @@ data class Personnel(
     var injectedDrugs: Map<String, Int>? = null, // 注射药名及剂量
     var transfusion: Pair<String, Int>? = null, // 输血信息 (血型, 数量)
     var injection: Pair<String, Int>? = null, // 输液信息 (药名, 剂量)
-    var Painkillers: Triple<String, Int, String>? = null, //止痛药信息 (药名, 剂量, 时间)
+    var painKillers: Triple<String, Int, String>? = null, //止痛药信息 (药名, 剂量, 时间)
     var oxygenInhalation: Boolean = false, //吸氧
     var antiShockPants: Boolean = false, //抗休克裤
     var shockOther: String? = null, //其他抗休克措施
@@ -75,7 +75,7 @@ data class Personnel(
         if (injectedDrugs != other.injectedDrugs) return false
         if (transfusion != other.transfusion) return false
         if (injection != other.injection) return false
-        if (Painkillers != other.Painkillers) return false
+        if (painKillers != other.painKillers) return false
         if (shockOther != other.shockOther) return false
         if (!emergencySurgery.contentEquals(other.emergencySurgery)) return false
         if (time != other.time) return false
@@ -116,7 +116,7 @@ data class Personnel(
         result = 31 * result + (injectedDrugs?.hashCode() ?: 0)
         result = 31 * result + (transfusion?.hashCode() ?: 0)
         result = 31 * result + (injection?.hashCode() ?: 0)
-        result = 31 * result + (Painkillers?.hashCode() ?: 0)
+        result = 31 * result + (painKillers?.hashCode() ?: 0)
         result = 31 * result + (shockOther?.hashCode() ?: 0)
         result = 31 * result + (emergencySurgery?.contentHashCode() ?: 0)
         result = 31 * result + (time?.hashCode() ?: 0)
