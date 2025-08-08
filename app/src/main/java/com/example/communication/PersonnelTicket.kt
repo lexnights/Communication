@@ -2,7 +2,6 @@ package com.example.communication
 
 import kotlinx.serialization.Serializable
 
-// 尽量避免用过于直白的名字
 @Serializable
 data class Personnel(
     var name: String? = null,
@@ -11,6 +10,13 @@ data class Personnel(
     var department: String? = null,
     var job: String? = null, //职位
     var rank: String? = null, //军衔
+)
+
+// 尽量避免用过于直白的名字
+@Serializable
+data class PersonnelTicket(
+    var personnel: Personnel = Personnel(), //人员信息
+
     var hurtPlace: String? = null, //受伤地点
     var hurtTime: String? = null, //受伤时间
     var arriveTime: String? = null, //到达时间
@@ -25,6 +31,7 @@ data class Personnel(
     var injuredCondition: Array<String>? = null, //受伤情况
     var woundType: Array<String>? = null, //伤口类型
     var injuredSeverity: String? = null, //受伤严重程度
+
     var toxoid: Int = 0, //破伤风类毒素
     var tetanus: Int = 0, //破伤风类抗毒素
     var injectedDrugs: Map<String, Int>? = null, // 注射药名及剂量
@@ -46,9 +53,8 @@ data class Personnel(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as Personnel
+        other as PersonnelTicket
 
-        if (age != other.age) return false
         if (emergencyTreatment != other.emergencyTreatment) return false
         if (radioactive != other.radioactive) return false
         if (isolation != other.isolation) return false
@@ -58,11 +64,7 @@ data class Personnel(
         if (tetanus != other.tetanus) return false
         if (oxygenInhalation != other.oxygenInhalation) return false
         if (antiShockPants != other.antiShockPants) return false
-        if (name != other.name) return false
-        if (gender != other.gender) return false
-        if (department != other.department) return false
-        if (job != other.job) return false
-        if (rank != other.rank) return false
+        if (personnel != other.personnel) return false
         if (hurtPlace != other.hurtPlace) return false
         if (hurtTime != other.hurtTime) return false
         if (arriveTime != other.arriveTime) return false
@@ -89,8 +91,7 @@ data class Personnel(
     }
 
     override fun hashCode(): Int {
-        var result = age
-        result = 31 * result + emergencyTreatment.hashCode()
+        var result = emergencyTreatment.hashCode()
         result = 31 * result + radioactive.hashCode()
         result = 31 * result + isolation.hashCode()
         result = 31 * result + poison.hashCode()
@@ -99,11 +100,7 @@ data class Personnel(
         result = 31 * result + tetanus
         result = 31 * result + oxygenInhalation.hashCode()
         result = 31 * result + antiShockPants.hashCode()
-        result = 31 * result + (name?.hashCode() ?: 0)
-        result = 31 * result + (gender?.hashCode() ?: 0)
-        result = 31 * result + (department?.hashCode() ?: 0)
-        result = 31 * result + (job?.hashCode() ?: 0)
-        result = 31 * result + (rank?.hashCode() ?: 0)
+        result = 31 * result + personnel.hashCode()
         result = 31 * result + (hurtPlace?.hashCode() ?: 0)
         result = 31 * result + (hurtTime?.hashCode() ?: 0)
         result = 31 * result + (arriveTime?.hashCode() ?: 0)

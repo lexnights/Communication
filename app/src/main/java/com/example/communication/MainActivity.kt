@@ -55,7 +55,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.communication.ui.theme.CommunicationTheme
@@ -72,20 +71,21 @@ class MainActivity : ComponentActivity() {
         setContent {
             CommunicationTheme {
                 //QRCodeReaderWrapper()
-                var personnelInfo by remember { mutableStateOf(Personnel()) }
+                var personnelTicketInfo by remember { mutableStateOf(PersonnelTicket()) }
                 FullScreenScrollableColumn {
                     BasePersonnelInfo(
-                        personnelInfo = personnelInfo,
+                        personnelTicketInfo = personnelTicketInfo,
                         onPersonnelInfoChange = {
-                            personnelInfo = it
+                            personnelTicketInfo = it
                         }
                     )
                     InjureDetailInfo(
-                        personnelInfo = personnelInfo,
+                        personnelTicketInfo = personnelTicketInfo,
                         onPersonnelInfoChange = {
-                            personnelInfo = it
+                            personnelTicketInfo = it
                         }
                     )
+                    Text("Debug:$personnelTicketInfo")
                 }
             }
         }
@@ -252,6 +252,48 @@ fun YesNoChooseFormInputField(
 }
 
 @Composable
+fun AidTypeFormInputField(
+    value: String?,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val aidTypes = listOf("自救", "互救", "卫救", "未包扎")
+    FormRow(label = "救治措施", modifier = modifier) {
+        FlowRow(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center,
+            horizontalArrangement = Arrangement.End,
+            maxItemsInEachRow = 2
+        ) {
+            aidTypes.forEach { type ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start,
+                    modifier = Modifier
+                        .selectable(
+                            selected = value == type,
+                            onClick = { onValueChange(type) },
+                            role = Role.RadioButton
+                        )
+                        //.weight(1f)
+                ) {
+                    RadioButton(
+                        selected = value == type,
+                        onClick = null,
+                        colors = RadioButtonDefaults.colors()
+                    )
+                    Text(
+                        text = type,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(start = 2.dp, end = 6.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun SingleChoiceFormInputField(
     label: String,
     options: List<String>,
@@ -265,7 +307,7 @@ fun SingleChoiceFormInputField(
         Text(
             text = label,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(top = 8.dp)
         )
 
         FlowRow(
@@ -312,7 +354,7 @@ fun MultipleChoiceFormInputField(
         Text(
             text = label,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(top = 8.dp)
         )
 
         FlowRow(
@@ -450,8 +492,8 @@ fun FullScreenScrollableColumn(content: @Composable () -> Unit) {
 
 @Composable
 fun BasePersonnelInfo(
-    personnelInfo: Personnel,
-    onPersonnelInfoChange: (Personnel) -> Unit
+    personnelTicketInfo: PersonnelTicket,
+    onPersonnelInfoChange: (PersonnelTicket) -> Unit
 ) {
     val ctx = LocalContext.current
 
@@ -470,16 +512,23 @@ fun BasePersonnelInfo(
             ExpandableWrapControl(title = "人员数据", initiallyExpanded = true) {
                 ExpandableQRScanner { qrData ->
                     try {
-                        onPersonnelInfoChange(Json.decodeFromString<Personnel>(qrData))
+                        onPersonnelInfoChange(
+                            personnelTicketInfo.copy(personnel = Json.decodeFromString<Personnel>(qrData))
+                        )
                     } catch (e: Exception) {
+                        println(e.toString())
                         Toast.makeText(ctx, "数据解析错误", Toast.LENGTH_SHORT).show()
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
 
                 StringFormInputField("姓名",
-                    value = personnelInfo.name,
-                    onValueChange = { onPersonnelInfoChange(personnelInfo.copy(name = it)) }
+                    value = personnelTicketInfo.personnel.name,
+                    onValueChange = {
+                        onPersonnelInfoChange(
+                            personnelTicketInfo.copy(personnel = personnelTicketInfo.personnel.copy(name = it))
+                        )
+                    }
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -488,74 +537,104 @@ fun BasePersonnelInfo(
                 ) {
                     GenderChooseFormInputField(
                         "性别",
-                        value = personnelInfo.gender,
-                        onValueChange = { onPersonnelInfoChange(personnelInfo.copy(gender = it ?: "")) },
+                        value = personnelTicketInfo.personnel.gender,
+                        onValueChange = {
+                            onPersonnelInfoChange(
+                                personnelTicketInfo.copy(personnel = personnelTicketInfo.personnel.copy(gender = it ?: ""))
+                            )
+                        },
                         modifier = Modifier.weight(2f)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     NumberFormInputField(
                         "年龄",
-                        value = personnelInfo.age,
-                        onValueChange = { onPersonnelInfoChange(personnelInfo.copy(age = it)) },
+                        value = personnelTicketInfo.personnel.age,
+                        onValueChange = {
+                            onPersonnelInfoChange(
+                                personnelTicketInfo.copy(personnel = personnelTicketInfo.personnel.copy(age = it))
+                            )
+                        },
                         modifier = Modifier.weight(1f))
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 StringFormInputField(
                     "部别",
-                    value = personnelInfo.department,
-                    onValueChange = { onPersonnelInfoChange(personnelInfo.copy(department = it)) }
+                    value = personnelTicketInfo.personnel.department,
+                    onValueChange = {
+                        onPersonnelInfoChange(
+                            personnelTicketInfo.copy(personnel = personnelTicketInfo.personnel.copy(department = it))
+                        )
+                    }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 StringFormInputField(
                     "职务",
-                    value = personnelInfo.position,
-                    onValueChange = { onPersonnelInfoChange(personnelInfo.copy(position = it)) }
+                    value = personnelTicketInfo.personnel.job,
+                    onValueChange = {
+                        onPersonnelInfoChange(
+                            personnelTicketInfo.copy(personnel = personnelTicketInfo.personnel.copy(job = it))
+                        )
+                    }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 StringFormInputField(
                     "军衔",
-                    value = personnelInfo.rank,
-                    onValueChange = { onPersonnelInfoChange(personnelInfo.copy(rank = it)) }
+                    value = personnelTicketInfo.personnel.rank,
+                    onValueChange = {
+                        onPersonnelInfoChange(
+                            personnelTicketInfo.copy(personnel = personnelTicketInfo.personnel.copy(rank = it))
+                        )
+                    }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 StringFormInputField(
-                    "地点",
-                    value = personnelInfo.hurtPlace,
-                    onValueChange = { onPersonnelInfoChange(personnelInfo.copy(hurtPlace = it)) }
+                    "负伤地点",
+                    value = personnelTicketInfo.hurtPlace,
+                    onValueChange = { onPersonnelInfoChange(personnelTicketInfo.copy(hurtPlace = it)) }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 DateChooseFormInputField(
-                    "时间",
-                    value = personnelInfo.hurtTime,
-                    onValueChange = { onPersonnelInfoChange(personnelInfo.copy(hurtTime = it)) }
+                    "负伤时间",
+                    value = personnelTicketInfo.hurtTime,
+                    onValueChange = { onPersonnelInfoChange(personnelTicketInfo.copy(hurtTime = it)) }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                DateChooseFormInputField(
+                    "到达时间",
+                    value = personnelTicketInfo.arriveTime,
+                    onValueChange = { onPersonnelInfoChange(personnelTicketInfo.copy(arriveTime = it)) }
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
             ExpandableWrapControl(title = "补充信息", initiallyExpanded = true) {
                 YesNoChooseFormInputField(
                     "是否为战伤",
-                    value = personnelInfo.type,
-                    onValueChange = { onPersonnelInfoChange(personnelInfo.copy(type = it)) }
+                    value = personnelTicketInfo.type,
+                    onValueChange = { onPersonnelInfoChange(personnelTicketInfo.copy(type = it)) }
+                )
+                AidTypeFormInputField(
+                    value = personnelTicketInfo.aid ?: "卫救",
+                    onValueChange = { onPersonnelInfoChange(personnelTicketInfo.copy(aid = it)) }
                 )
                 YesNoChooseFormInputField(
                     "紧急救治",
-                    value = personnelInfo.emergencyTreatment,
-                    onValueChange = { onPersonnelInfoChange(personnelInfo.copy(emergencyTreatment = it)) }
+                    value = personnelTicketInfo.emergencyTreatment,
+                    onValueChange = { onPersonnelInfoChange(personnelTicketInfo.copy(emergencyTreatment = it)) }
                 )
                 YesNoChooseFormInputField(
                     "放射性污染",
-                    value = personnelInfo.radioactive,
-                    onValueChange = { onPersonnelInfoChange(personnelInfo.copy(radioactive = it)) }
+                    value = personnelTicketInfo.radioactive,
+                    onValueChange = { onPersonnelInfoChange(personnelTicketInfo.copy(radioactive = it)) }
                 )
                 YesNoChooseFormInputField(
                     "隔离",
-                    value = personnelInfo.isolation,
-                    onValueChange = { onPersonnelInfoChange(personnelInfo.copy(isolation = it)) }
+                    value = personnelTicketInfo.isolation,
+                    onValueChange = { onPersonnelInfoChange(personnelTicketInfo.copy(isolation = it)) }
                 )
                 YesNoChooseFormInputField(
                     "毒剂",
-                    value = personnelInfo.poison,
-                    onValueChange = { onPersonnelInfoChange(personnelInfo.copy(poison = it)) }
+                    value = personnelTicketInfo.poison,
+                    onValueChange = { onPersonnelInfoChange(personnelTicketInfo.copy(poison = it)) }
                 )
             }
         }
@@ -564,8 +643,8 @@ fun BasePersonnelInfo(
 
 @Composable
 fun InjureDetailInfo(
-    personnelInfo: Personnel,
-    onPersonnelInfoChange: (Personnel) -> Unit
+    personnelTicketInfo: PersonnelTicket,
+    onPersonnelInfoChange: (PersonnelTicket) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -581,17 +660,53 @@ fun InjureDetailInfo(
         BoxWithTitleAndBorder("战伤分类") {
             MultipleChoiceFormInputField(
                 "伤部",
-                options = arrayOf("头部", "颈部", "胸部", "腹部", "四肢", "其他"),
-                selectedOptions = personnelInfo.injuredArea,
+                options = arrayOf(
+                    "颅脑", "颌面", "颈", "胸(背)", "腹(腰)",
+                    "骨盆(会阴)", "脊柱", "上肢", "下肢", "内脏"
+                ),
+                selectedOptions = personnelTicketInfo.injuredArea,
                 onSelectionChange = {
-                    onPersonnelInfoChange(personnelInfo.copy(injuredArea = it))
+                    onPersonnelInfoChange(personnelTicketInfo.copy(injuredArea = it))
+                }
+            )
+            MultipleChoiceFormInputField(
+                "伤类",
+                options = arrayOf(
+                    "弹片伤", "地雷伤", "枪弹伤", "烧伤",
+                    "刃器伤", "挤压伤", "冻伤", "冲击伤",
+                    "毒剂伤", "核放射伤害", "其它"
+                ),
+                selectedOptions = personnelTicketInfo.injuredType,
+                onSelectionChange = {
+                    onPersonnelInfoChange(personnelTicketInfo.copy(injuredType = it))
+                }
+            )
+            MultipleChoiceFormInputField(
+                "伤情",
+                options = arrayOf(
+                    "大出血", "窒息", "休克", "昏迷",
+                    "气胸", "骨折", "截瘫", "其它"
+                ),
+                selectedOptions = personnelTicketInfo.injuredCondition,
+                onSelectionChange = {
+                    onPersonnelInfoChange(personnelTicketInfo.copy(injuredCondition = it))
+                }
+            )
+            MultipleChoiceFormInputField(
+                "伤型",
+                options = arrayOf(
+                    "贯通", "盲管", "切线", "闭合", "其他"
+                ),
+                selectedOptions = personnelTicketInfo.woundType,
+                onSelectionChange = {
+                    onPersonnelInfoChange(personnelTicketInfo.copy(woundType = it))
                 }
             )
             SingleChoiceFormInputField(
                 "伤势",
-                options = listOf("轻伤", "中伤", "重伤"),
-                selectedOption = personnelInfo.injuredSeverity,
-                onOptionSelected = { onPersonnelInfoChange(personnelInfo.copy(injuredSeverity = it)) }
+                options = listOf("轻", "中", "重"),
+                selectedOption = personnelTicketInfo.injuredSeverity,
+                onOptionSelected = { onPersonnelInfoChange(personnelTicketInfo.copy(injuredSeverity = it)) }
             )
         }
     }
