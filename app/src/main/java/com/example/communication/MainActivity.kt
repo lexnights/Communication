@@ -310,6 +310,7 @@ fun SingleChoiceFormInputField(
     options: List<String>,
     selectedOption: String?,
     onOptionSelected: (String) -> Unit,
+    enableOtherOption: Boolean = false
 ) {
     SubRegionWithTitle(title = label) {
         FlowRow(
@@ -338,6 +339,35 @@ fun SingleChoiceFormInputField(
                     )
                 }
             }
+
+            if (enableOtherOption) {
+                val otherOption = remember { mutableStateOf("") }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .selectable(
+                            selected = otherOption.value == selectedOption,
+                            onClick = { onOptionSelected(otherOption.value) },
+                            role = Role.RadioButton
+                        )
+                ) {
+                    RadioButton(
+                        selected = otherOption.value == selectedOption,
+                        onClick = null
+                    )
+                    Text(
+                        text = "",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(start = 2.dp)
+                    )
+                    UnderlinedTextField(
+                        value = otherOption.value,
+                        onValueChange = { otherOption.value = it },
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+                        modifier = Modifier.width(120.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -347,7 +377,8 @@ fun MultipleChoiceFormInputField(
     label: String,
     options: Array<String>,
     selectedOptions: Array<String>?,
-    onSelectionChange: (Array<String>?) -> Unit
+    onSelectionChange: (Array<String>?) -> Unit,
+    enableOtherOption: Boolean = false
 ) {
     SubRegionWithTitle(title = label) {
         FlowRow(
@@ -386,6 +417,57 @@ fun MultipleChoiceFormInputField(
                         text = option,
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(start = 2.dp)
+                    )
+                }
+            }
+
+            if (enableOtherOption) {
+                val otherOption = remember { mutableStateOf("") }
+                val isOtherOptionSelected = selectedOptions?.contains(otherOption.value) ?: false
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .selectable(
+                            selected = isOtherOptionSelected,
+                            onClick = {
+                                val newSelection =
+                                    selectedOptions?.toMutableList() ?: mutableListOf()
+
+                                if (isOtherOptionSelected) {
+                                    newSelection.remove(otherOption.value)
+                                } else {
+                                    newSelection.add(otherOption.value)
+                                }
+
+                                onSelectionChange(newSelection.toTypedArray())
+                            },
+                            role = Role.RadioButton
+                        )
+                ) {
+                    Checkbox(
+                        checked = isOtherOptionSelected,
+                        onCheckedChange = null,
+                    )
+                    Text(
+                        text = "其他",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(start = 2.dp)
+                    )
+                    UnderlinedTextField(
+                        value = otherOption.value,
+                        onValueChange = {
+                            if (isOtherOptionSelected) {
+                                val newSelection = selectedOptions.toMutableList()
+                                newSelection.remove(otherOption.value)
+
+                                otherOption.value = it
+                                newSelection.add(otherOption.value)
+
+                                onSelectionChange(newSelection.toTypedArray())
+                            }
+                        },
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+                        modifier = Modifier.width(120.dp)
                     )
                 }
             }
@@ -924,33 +1006,36 @@ fun InjureDetailInfo(
                 options = arrayOf(
                     "弹片伤", "地雷伤", "枪弹伤", "烧伤",
                     "刃器伤", "挤压伤", "冻伤", "冲击伤",
-                    "毒剂伤", "核放射伤害", "其它"
+                    "毒剂伤", "核放射伤害"
                 ),
                 selectedOptions = personnelTicketInfo.injuredType,
                 onSelectionChange = {
                     onPersonnelInfoChange(personnelTicketInfo.copy(injuredType = it))
-                }
+                },
+                enableOtherOption = true
             )
             MultipleChoiceFormInputField(
                 "伤情",
                 options = arrayOf(
                     "大出血", "窒息", "休克", "昏迷",
-                    "气胸", "骨折", "截瘫", "其它"
+                    "气胸", "骨折", "截瘫"
                 ),
                 selectedOptions = personnelTicketInfo.injuredCondition,
                 onSelectionChange = {
                     onPersonnelInfoChange(personnelTicketInfo.copy(injuredCondition = it))
-                }
+                },
+                enableOtherOption = true
             )
             MultipleChoiceFormInputField(
                 "伤型",
                 options = arrayOf(
-                    "贯通", "盲管", "切线", "闭合", "其他"
+                    "贯通", "盲管", "切线", "闭合"
                 ),
                 selectedOptions = personnelTicketInfo.woundType,
                 onSelectionChange = {
                     onPersonnelInfoChange(personnelTicketInfo.copy(woundType = it))
-                }
+                },
+                enableOtherOption = true
             )
             SingleChoiceFormInputField(
                 "伤势",
@@ -1090,8 +1175,7 @@ fun CounteractDetailInfo(
                 "紧急手术",
                 options = arrayOf(
                     "气管切开", "血管结扎", "开放气胸封闭",
-                    "血气胸闭式引流", "导尿", "耻骨上膀胱穿刺",
-                    "其他"
+                    "血气胸闭式引流", "导尿", "耻骨上膀胱穿刺"
                 ),
                 selectedOptions = personnelTicketInfo.emergencySurgery,
                 onSelectionChange = {
@@ -1100,7 +1184,8 @@ fun CounteractDetailInfo(
                             emergencySurgery = it
                         )
                     )
-                }
+                },
+                enableOtherOption = true
             )
         }
     }
