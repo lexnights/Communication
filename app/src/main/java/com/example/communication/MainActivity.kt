@@ -39,6 +39,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
@@ -56,6 +57,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.communication.ui.theme.CommunicationTheme
 import kotlinx.serialization.json.Json
@@ -80,6 +82,12 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                     InjureDetailInfo(
+                        personnelTicketInfo = personnelTicketInfo,
+                        onPersonnelInfoChange = {
+                            personnelTicketInfo = it
+                        }
+                    )
+                    CounteractDetailInfo(
                         personnelTicketInfo = personnelTicketInfo,
                         onPersonnelInfoChange = {
                             personnelTicketInfo = it
@@ -299,17 +307,8 @@ fun SingleChoiceFormInputField(
     options: List<String>,
     selectedOption: String?,
     onOptionSelected: (String) -> Unit,
-    modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(top = 8.dp)
-        )
-
+    SubRegionWithTitle(title = label) {
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -345,18 +344,9 @@ fun MultipleChoiceFormInputField(
     label: String,
     options: Array<String>,
     selectedOptions: Array<String>?,
-    onSelectionChange: (Array<String>?) -> Unit,
-    modifier: Modifier = Modifier
+    onSelectionChange: (Array<String>?) -> Unit
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(top = 8.dp)
-        )
-
+    SubRegionWithTitle(title = label) {
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -371,7 +361,8 @@ fun MultipleChoiceFormInputField(
                         .selectable(
                             selected = selected,
                             onClick = {
-                                val newSelection = selectedOptions?.toMutableList() ?: mutableListOf()
+                                val newSelection =
+                                    selectedOptions?.toMutableList() ?: mutableListOf()
 
                                 if (selected) {
                                     newSelection.remove(option)
@@ -410,6 +401,42 @@ fun DateChooseFormInputField(
         UnderlinedTextField(
             value = value ?: "",
             onValueChange = onValueChange,
+        )
+    }
+}
+
+@Composable
+fun SimpleDrugDosageInputField(
+    drugName: String,
+    drugUnit: String,
+    drugDosage: Int,
+    onDrugDosageChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = drugName,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        UnderlinedTextField(
+            value = drugDosage.let {
+                if (it == -1) ""
+                else it.toString()
+            },
+            onValueChange = {
+                val newDosage = it.toIntOrNull() ?: -1
+                onDrugDosageChange(newDosage)
+            },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+            modifier = Modifier.width(100.dp)
+        )
+        Text(
+            text = drugUnit,
+            style = MaterialTheme.typography.bodyMedium
         )
     }
 }
@@ -469,6 +496,23 @@ fun BoxWithTitleAndBorder(title: String, content: @Composable () -> Unit) {
             .fillMaxWidth()
             .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
             .padding(16.dp),
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        content()
+    }
+}
+
+@Composable
+fun SubRegionWithTitle(title: String, content: @Composable () -> Unit) {
+    Column(
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+            .padding(4.dp),
     ) {
         Text(
             text = title,
@@ -708,6 +752,53 @@ fun InjureDetailInfo(
                 selectedOption = personnelTicketInfo.injuredSeverity,
                 onOptionSelected = { onPersonnelInfoChange(personnelTicketInfo.copy(injuredSeverity = it)) }
             )
+        }
+    }
+}
+
+@Composable
+fun CounteractDetailInfo(
+    personnelTicketInfo: PersonnelTicket,
+    onPersonnelInfoChange: (PersonnelTicket) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+            .padding(
+                start = 16.dp,
+                end = 16.dp,
+                top = 4.dp,
+                bottom = 0.dp
+            )
+    ) {
+        BoxWithTitleAndBorder("处置措施") {
+            SubRegionWithTitle("抗感染") {
+                SimpleDrugDosageInputField(
+                    drugName = "破伤风类毒素",
+                    drugUnit = "毫升",
+                    drugDosage = personnelTicketInfo.toxoid,
+                    onDrugDosageChange = {
+                        onPersonnelInfoChange(
+                            personnelTicketInfo.copy(
+                                toxoid = it
+                            )
+                        )
+                    }
+                )
+                SimpleDrugDosageInputField(
+                    drugName = "破伤风抗毒血清",
+                    drugUnit = "单位",
+                    drugDosage = personnelTicketInfo.tetanus,
+                    onDrugDosageChange = {
+                        onPersonnelInfoChange(
+                            personnelTicketInfo.copy(
+                                tetanus = it
+                            )
+                        )
+                    }
+                )
+            }
         }
     }
 }
