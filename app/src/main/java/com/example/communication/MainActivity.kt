@@ -31,6 +31,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -39,6 +40,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -58,6 +60,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.example.communication.ui.theme.CommunicationTheme
 import kotlinx.serialization.json.Json
@@ -442,6 +445,209 @@ fun SimpleDrugDosageInputField(
 }
 
 @Composable
+fun MultipleDrugDosageInputField(
+    injectedDrugs: Map<String, String>?,
+    onInjectedDrugsChange: (Map<String, String>) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    injectedDrugs?.forEach { (drugName, drugDosage) ->
+        Row(
+            modifier = modifier,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "药名",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            UnderlinedTextField(
+                value = drugName,
+                onValueChange = { newDrugName ->
+                    val updatedMap = injectedDrugs.toMutableMap()
+                    updatedMap.remove(drugName)
+                    updatedMap[newDrugName] = drugDosage
+                    onInjectedDrugsChange(updatedMap)
+                },
+                textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+                modifier = Modifier.width(100.dp)
+            )
+            Text(
+                text = "，剂量",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            UnderlinedTextField(
+                value = drugDosage,
+                onValueChange = {
+                    val updatedMap = injectedDrugs.toMutableMap()
+                    updatedMap[drugName] = it
+                    onInjectedDrugsChange(updatedMap)
+                },
+                textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+                modifier = Modifier.width(100.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+
+    if (injectedDrugs == null || injectedDrugs.keys.last() != "") {
+        Row(
+            modifier = modifier,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "+ 添加更多药物",
+                modifier = Modifier
+                    .clickable {
+                        val updatedMap = injectedDrugs?.toMutableMap() ?: mutableMapOf()
+                        updatedMap.put("", "")
+                        onInjectedDrugsChange(updatedMap)
+                    }
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                color = Color.Blue,
+                style = MaterialTheme.typography.bodyMedium,
+                textDecoration = TextDecoration.Underline
+            )
+        }
+    }
+}
+
+@Composable
+fun TransfusionDosageInputField(
+    transfusion: Pair<String, Int>?,
+    onTransfusionChange: (Pair<String, Int>?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val (bloodType, dosage) = transfusion ?: Pair("", 0)
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "输血（血型",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        UnderlinedTextField(
+            value = bloodType,
+            onValueChange = { newBloodType ->
+                onTransfusionChange(Pair(newBloodType, dosage))
+            },
+            textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+            modifier = Modifier.width(30.dp)
+        )
+        Text(
+            text = "），",
+            style = MaterialTheme.typography.bodyMedium
+        )
+        UnderlinedTextField(
+            value = dosage.toString(),
+            onValueChange = { newDosage ->
+                onTransfusionChange(Pair(bloodType, newDosage.toIntOrNull() ?: 0))
+            },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+            modifier = Modifier.width(100.dp)
+        )
+        Text(
+            text = "毫升",
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+@Composable
+fun InjectionDosageInputField(
+    injection: Pair<String, Int>?,
+    onInjectionChange: (Pair<String, Int>) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val (drugName, dosage) = injection ?: Pair("", 0)
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "输液  名称",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        UnderlinedTextField(
+            value = drugName,
+            onValueChange = { newDrugName ->
+                onInjectionChange(Pair(newDrugName, dosage))
+            },
+            textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+            modifier = Modifier.width(50.dp)
+        )
+        Text(
+            text = "剂量",
+            style = MaterialTheme.typography.bodyMedium
+        )
+        UnderlinedTextField(
+            value = dosage.toString(),
+            onValueChange = { newDosage ->
+                onInjectionChange(Pair(drugName, newDosage.toIntOrNull() ?: 0))
+            },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+            modifier = Modifier.width(50.dp)
+        )
+        Text(
+            text = "毫升",
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+@Composable
+fun PainkillerDosageInputField(
+    painkiller: Triple<String, Int, String>?,
+    onPainkillerChange: (Triple<String, Int, String>?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val (painkillerName, dosage, time) = painkiller ?: Triple("", 0, "")
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "止痛  药名",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        UnderlinedTextField(
+            value = painkillerName,
+            onValueChange = { newPainkillerName ->
+                onPainkillerChange(Triple(newPainkillerName, dosage, time))
+            },
+            textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+            modifier = Modifier.width(50.dp)
+        )
+        Text(
+            text = "剂量",
+            style = MaterialTheme.typography.bodyMedium
+        )
+        UnderlinedTextField(
+            value = dosage.toString(),
+            onValueChange = { newDosage ->
+                onPainkillerChange(Triple(painkillerName, newDosage.toIntOrNull() ?: 0, time))
+            },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+            modifier = Modifier.width(50.dp)
+        )
+        Text(
+            text = "时间",
+            style = MaterialTheme.typography.bodyMedium
+        )
+        UnderlinedTextField(
+            value = time,
+            onValueChange = { newTime ->
+                onPainkillerChange(Triple(painkillerName, dosage, newTime))
+            },
+            textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+            modifier = Modifier.width(50.dp)
+        )
+    }
+}
+
+@Composable
 fun ExpandableQRScanner(modifier: Modifier = Modifier, onScanCompleted: (String) -> Unit) {
     val qrScanned = remember { mutableStateOf(true) }
     if (qrScanned.value) {
@@ -786,6 +992,7 @@ fun CounteractDetailInfo(
                         )
                     }
                 )
+                Spacer(modifier = Modifier.height(16.dp))
                 SimpleDrugDosageInputField(
                     drugName = "破伤风抗毒血清",
                     drugUnit = "单位",
@@ -798,7 +1005,103 @@ fun CounteractDetailInfo(
                         )
                     }
                 )
+                Spacer(modifier = Modifier.height(16.dp))
+                MultipleDrugDosageInputField(
+                    injectedDrugs = personnelTicketInfo.injectedDrugs,
+                    onInjectedDrugsChange = {
+                        onPersonnelInfoChange(
+                            personnelTicketInfo.copy(
+                                injectedDrugs = it
+                            )
+                        )
+                    }
+                )
             }
+
+            SubRegionWithTitle(title = "抗休克") {
+                TransfusionDosageInputField(
+                    transfusion = personnelTicketInfo.transfusion,
+                    onTransfusionChange = {
+                        onPersonnelInfoChange(
+                            personnelTicketInfo.copy(
+                                transfusion = it
+                            )
+                        )
+                    }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                InjectionDosageInputField(
+                    injection = personnelTicketInfo.injection,
+                    onInjectionChange = {
+                        onPersonnelInfoChange(
+                            personnelTicketInfo.copy(
+                                injection = it
+                            )
+                        )
+                    }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                PainkillerDosageInputField(
+                    painkiller = personnelTicketInfo.painKillers,
+                    onPainkillerChange = {
+                        onPersonnelInfoChange(
+                            personnelTicketInfo.copy(
+                                painKillers = it
+                            )
+                        )
+                    }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                YesNoChooseFormInputField(
+                    "吸氧",
+                    value = personnelTicketInfo.oxygenInhalation,
+                    onValueChange = {
+                        onPersonnelInfoChange(
+                            personnelTicketInfo.copy(
+                                oxygenInhalation = it
+                            )
+                        )
+                    }
+                )
+                YesNoChooseFormInputField(
+                    "抗休克裤",
+                    value = personnelTicketInfo.antiShockPants,
+                    onValueChange = {
+                        onPersonnelInfoChange(
+                            personnelTicketInfo.copy(
+                                antiShockPants = it
+                            )
+                        )
+                    }
+                )
+                StringFormInputField(
+                    "其他措施",
+                    value = personnelTicketInfo.shockOther,
+                    onValueChange = {
+                        onPersonnelInfoChange(
+                            personnelTicketInfo.copy(
+                                shockOther = it
+                            )
+                        )
+                    }
+                )
+            }
+            MultipleChoiceFormInputField(
+                "紧急手术",
+                options = arrayOf(
+                    "气管切开", "血管结扎", "开放气胸封闭",
+                    "血气胸闭式引流", "导尿", "耻骨上膀胱穿刺",
+                    "其他"
+                ),
+                selectedOptions = personnelTicketInfo.emergencySurgery,
+                onSelectionChange = {
+                    onPersonnelInfoChange(
+                        personnelTicketInfo.copy(
+                            emergencySurgery = it
+                        )
+                    )
+                }
+            )
         }
     }
 }
