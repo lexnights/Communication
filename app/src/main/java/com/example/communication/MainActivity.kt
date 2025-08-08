@@ -31,7 +31,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -40,8 +39,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
@@ -91,6 +88,18 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                     CounteractDetailInfo(
+                        personnelTicketInfo = personnelTicketInfo,
+                        onPersonnelInfoChange = {
+                            personnelTicketInfo = it
+                        }
+                    )
+                    EvacuateDetailInfo(
+                        personnelTicketInfo = personnelTicketInfo,
+                        onPersonnelInfoChange = {
+                            personnelTicketInfo = it
+                        }
+                    )
+                    SurgeonDetailInfo(
                         personnelTicketInfo = personnelTicketInfo,
                         onPersonnelInfoChange = {
                             personnelTicketInfo = it
@@ -356,13 +365,19 @@ fun SingleChoiceFormInputField(
                         onClick = null
                     )
                     Text(
-                        text = "",
+                        text = "其他",
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(start = 2.dp)
                     )
                     UnderlinedTextField(
                         value = otherOption.value,
-                        onValueChange = { otherOption.value = it },
+                        onValueChange = {
+                            if (otherOption.value == selectedOption) {
+                                onOptionSelected(it)
+                            }
+
+                            otherOption.value = it
+                        },
                         textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
                         modifier = Modifier.width(120.dp)
                     )
@@ -464,6 +479,8 @@ fun MultipleChoiceFormInputField(
                                 newSelection.add(otherOption.value)
 
                                 onSelectionChange(newSelection.toTypedArray())
+                            } else {
+                                otherOption.value = it
                             }
                         },
                         textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
@@ -1186,6 +1203,123 @@ fun CounteractDetailInfo(
                     )
                 },
                 enableOtherOption = true
+            )
+        }
+    }
+}
+
+@Composable
+fun EvacuateDetailInfo(
+    personnelTicketInfo: PersonnelTicket,
+    onPersonnelInfoChange: (PersonnelTicket) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+            .padding(
+                start = 16.dp,
+                end = 16.dp,
+                top = 4.dp,
+                bottom = 0.dp
+            )
+    ) {
+        BoxWithTitleAndBorder("后送") {
+            SubRegionWithTitle("时间") {
+                DateChooseFormInputField(
+                    "于",
+                    value = personnelTicketInfo.evacuateTime,
+                    onValueChange = {
+                        onPersonnelInfoChange(
+                            personnelTicketInfo.copy(
+                                evacuateTime = it
+                            )
+                        )
+                    }
+                )
+                StringFormInputField(
+                    "送往",
+                    value = personnelTicketInfo.evacuateDestination,
+                    onValueChange = {
+                        onPersonnelInfoChange(
+                            personnelTicketInfo.copy(
+                                evacuateDestination = it
+                            )
+                        )
+                    }
+                )
+            }
+            SingleChoiceFormInputField(
+                "方式",
+                options = listOf(
+                    "步行", "担架", "汽车", "救护车",
+                    "直升机", "船", "回程汽车"
+                ),
+                selectedOption = personnelTicketInfo.evacuateVehicle,
+                onOptionSelected = {
+                    onPersonnelInfoChange(
+                        personnelTicketInfo.copy(
+                            evacuateVehicle = it
+                        )
+                    )
+                },
+                enableOtherOption = true
+            )
+            SingleChoiceFormInputField(
+                "体位",
+                options = listOf("坐", "半卧", "卧", "侧卧(左右)"),
+                selectedOption = personnelTicketInfo.restingPosition,
+                onOptionSelected = {
+                    onPersonnelInfoChange(
+                        personnelTicketInfo.copy(
+                            restingPosition = it
+                        )
+                    )
+                },
+                enableOtherOption = true
+            )
+        }
+    }
+}
+
+@Composable
+fun SurgeonDetailInfo(
+    personnelTicketInfo: PersonnelTicket,
+    onPersonnelInfoChange: (PersonnelTicket) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+            .padding(
+                start = 16.dp,
+                end = 16.dp,
+                top = 4.dp,
+                bottom = 0.dp
+            )
+    ) {
+        BoxWithTitleAndBorder("填写者信息") {
+            StringFormInputField(
+                "军医",
+                value = personnelTicketInfo.surgeon,
+                onValueChange = {
+                    onPersonnelInfoChange(
+                        personnelTicketInfo.copy(
+                            surgeon = it
+                        )
+                    )
+                }
+            )
+            StringFormInputField(
+                "填表部门",
+                value = personnelTicketInfo.fillDepartment,
+                onValueChange = {
+                    onPersonnelInfoChange(
+                        personnelTicketInfo.copy(
+                            fillDepartment = it
+                        )
+                    )
+                }
             )
         }
     }

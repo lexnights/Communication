@@ -42,10 +42,10 @@ data class PersonnelTicket(
     var antiShockPants: Boolean = false, //抗休克裤
     var shockOther: String? = null, //其他抗休克措施
     var emergencySurgery: Array<String>? = null, //紧急手术
-    var time: String? = null, //时间
-    var destination: String? = null, //目的地
-    var vehicle: String? = null, //运输工具
-    var position: String? = null, //体位
+    var evacuateTime: String? = null, //后送时间
+    var evacuateDestination: String? = null, //后送目的地
+    var evacuateVehicle: String? = null, //运输工具
+    var restingPosition: String? = null, //体位
     var fillDepartment: String? = null, //填表部门
     var surgeon: String? = null, //军医
 ) {
@@ -80,10 +80,10 @@ data class PersonnelTicket(
         if (painKillers != other.painKillers) return false
         if (shockOther != other.shockOther) return false
         if (!emergencySurgery.contentEquals(other.emergencySurgery)) return false
-        if (time != other.time) return false
-        if (destination != other.destination) return false
-        if (vehicle != other.vehicle) return false
-        if (position != other.position) return false
+        if (evacuateTime != other.evacuateTime) return false
+        if (evacuateDestination != other.evacuateDestination) return false
+        if (evacuateVehicle != other.evacuateVehicle) return false
+        if (restingPosition != other.restingPosition) return false
         if (fillDepartment != other.fillDepartment) return false
         if (surgeon != other.surgeon) return false
 
@@ -116,10 +116,10 @@ data class PersonnelTicket(
         result = 31 * result + (painKillers?.hashCode() ?: 0)
         result = 31 * result + (shockOther?.hashCode() ?: 0)
         result = 31 * result + (emergencySurgery?.contentHashCode() ?: 0)
-        result = 31 * result + (time?.hashCode() ?: 0)
-        result = 31 * result + (destination?.hashCode() ?: 0)
-        result = 31 * result + (vehicle?.hashCode() ?: 0)
-        result = 31 * result + (position?.hashCode() ?: 0)
+        result = 31 * result + (evacuateTime?.hashCode() ?: 0)
+        result = 31 * result + (evacuateDestination?.hashCode() ?: 0)
+        result = 31 * result + (evacuateVehicle?.hashCode() ?: 0)
+        result = 31 * result + (restingPosition?.hashCode() ?: 0)
         result = 31 * result + (fillDepartment?.hashCode() ?: 0)
         result = 31 * result + (surgeon?.hashCode() ?: 0)
         return result
