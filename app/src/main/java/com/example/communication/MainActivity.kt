@@ -31,6 +31,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -42,9 +43,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -59,16 +62,22 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import com.example.communication.ui.theme.CommunicationTheme
+import com.jakewharton.threetenabp.AndroidThreeTen
 import kotlinx.serialization.json.Json
 import org.publicvalue.multiplatform.qrcode.CameraPosition
 import org.publicvalue.multiplatform.qrcode.CodeType
 import org.publicvalue.multiplatform.qrcode.ScannerWithPermissions
+import org.threeten.bp.LocalDateTime
+import org.threeten.bp.format.DateTimeFormatter
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AndroidThreeTen.init(this)
+
         enableEdgeToEdge()
         setContent {
             CommunicationTheme {
@@ -493,16 +502,185 @@ fun MultipleChoiceFormInputField(
 }
 
 @Composable
+fun SimpleDatePickerDialog(
+    isDatePickerVisible: Boolean,
+    onDialogVisibilityChanged: (Boolean) -> Unit = {},
+    onDismissRequest: () -> Unit = {},
+    onDateSelected: (String) -> Unit = {}
+) {
+    val current = LocalDateTime.now()
+
+    val year = remember { mutableIntStateOf(current.year) }
+    val month = remember { mutableIntStateOf(current.monthValue) }
+    val day = remember { mutableIntStateOf(current.dayOfMonth) }
+    val hour = remember { mutableIntStateOf(current.hour) }
+
+    if (isDatePickerVisible) {
+        Dialog(
+            onDismissRequest = {
+                onDismissRequest()
+                onDialogVisibilityChanged(false)
+            }
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.extraLarge,
+                color = Color.White
+            ) {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    SubRegionWithTitle("选择日期") {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            UnderlinedTextField(
+                                value = year.intValue.let {
+                                    if (it == -1) "" else it.toString()
+                                },
+                                onValueChange = {
+                                    year.intValue = it.toIntOrNull() ?: -1
+                                },
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(textAlign = TextAlign.Center),
+                                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.width(60.dp)
+                            )
+                            Text(
+                                text = "年",
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            UnderlinedTextField(
+                                value = month.intValue.let {
+                                    if (it == -1) "" else it.toString()
+                                },
+                                onValueChange = {
+                                    month.intValue = it.toIntOrNull() ?: -1
+                                },
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(textAlign = TextAlign.Center),
+                                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.width(30.dp)
+                            )
+                            Text(
+                                text = "月",
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            UnderlinedTextField(
+                                value = day.intValue.let {
+                                    if (it == -1) "" else it.toString()
+                                },
+                                onValueChange = {
+                                    day.intValue = it.toIntOrNull() ?: -1
+                                },
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(textAlign = TextAlign.Center),
+                                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.width(30.dp)
+                            )
+                            Text(
+                                text = "日",
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            UnderlinedTextField(
+                                value = hour.intValue.let {
+                                    if (it <= -1 || it >= 24) "" else it.toString()
+                                },
+                                onValueChange = {
+                                    hour.intValue = it.toIntOrNull() ?: -1
+                                },
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(textAlign = TextAlign.Center),
+                                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.width(30.dp)
+                            )
+                            Text(
+                                text = "时",
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Button(
+                            onClick = {
+                                onDismissRequest()
+                                onDialogVisibilityChanged(false)
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Red,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "取消"
+                            )
+                            Text("取消")
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                onDateSelected(
+                                    "${year.intValue}年${month.intValue}月${day.intValue}日${hour.intValue}时"
+                                )
+                                onDialogVisibilityChanged(false)
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Blue,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "确定"
+                            )
+                            Text("确定")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun DateChooseFormInputField(
     label: String,
     value: String?,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDatePickerVisible = remember { mutableStateOf(false) }
+
     FormRow(label = label, modifier = modifier) {
         UnderlinedTextField(
             value = value ?: "",
             onValueChange = onValueChange,
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            "选择日期",
+            modifier = Modifier
+                .clickable {
+                    isDatePickerVisible.value = true
+                }
+                .weight(0.5f),
+            color = Color.Blue,
+            style = MaterialTheme.typography.bodyMedium,
+            textDecoration = TextDecoration.Underline
+        )
+    }
+
+    if (isDatePickerVisible.value) {
+        SimpleDatePickerDialog(
+            isDatePickerVisible = isDatePickerVisible.value,
+            onDialogVisibilityChanged = {
+                isDatePickerVisible.value = it
+            },
+            onDismissRequest = {
+                isDatePickerVisible.value = false
+            },
+            onDateSelected = onValueChange
         )
     }
 }
@@ -839,6 +1017,12 @@ fun FullScreenScrollableColumn(content: @Composable () -> Unit) {
     }
 }
 
+fun generatePersonnelArrivalTimeString(): String? {
+    val currentTime = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日HH时")
+    return currentTime.format(formatter)
+}
+
 @Composable
 fun BasePersonnelInfo(
     personnelTicketInfo: PersonnelTicket,
@@ -862,7 +1046,10 @@ fun BasePersonnelInfo(
                 ExpandableQRScanner { qrData ->
                     try {
                         onPersonnelInfoChange(
-                            personnelTicketInfo.copy(personnel = Json.decodeFromString<Personnel>(qrData))
+                            personnelTicketInfo.copy(
+                                personnel = Json.decodeFromString<Personnel>(qrData),
+                                arriveTime = generatePersonnelArrivalTimeString()
+                            )
                         )
                     } catch (e: Exception) {
                         println(e.toString())
