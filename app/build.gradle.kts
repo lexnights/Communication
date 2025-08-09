@@ -54,6 +54,7 @@ dependencies {
     implementation("io.github.kalinjul.easyqrscan:scanner:0.4.0")
     implementation("androidx.compose.material3:material3:${material3Version}")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+    implementation("com.jakewharton.threetenabp:threetenabp:1.4.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

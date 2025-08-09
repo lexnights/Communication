@@ -31,7 +31,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -40,14 +40,14 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -62,16 +62,22 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import com.example.communication.ui.theme.CommunicationTheme
+import com.jakewharton.threetenabp.AndroidThreeTen
 import kotlinx.serialization.json.Json
 import org.publicvalue.multiplatform.qrcode.CameraPosition
 import org.publicvalue.multiplatform.qrcode.CodeType
 import org.publicvalue.multiplatform.qrcode.ScannerWithPermissions
+import org.threeten.bp.LocalDateTime
+import org.threeten.bp.format.DateTimeFormatter
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AndroidThreeTen.init(this)
+
         enableEdgeToEdge()
         setContent {
             CommunicationTheme {
@@ -91,6 +97,18 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                     CounteractDetailInfo(
+                        personnelTicketInfo = personnelTicketInfo,
+                        onPersonnelInfoChange = {
+                            personnelTicketInfo = it
+                        }
+                    )
+                    EvacuateDetailInfo(
+                        personnelTicketInfo = personnelTicketInfo,
+                        onPersonnelInfoChange = {
+                            personnelTicketInfo = it
+                        }
+                    )
+                    SurgeonDetailInfo(
                         personnelTicketInfo = personnelTicketInfo,
                         onPersonnelInfoChange = {
                             personnelTicketInfo = it
@@ -356,13 +374,19 @@ fun SingleChoiceFormInputField(
                         onClick = null
                     )
                     Text(
-                        text = "",
+                        text = "其他",
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(start = 2.dp)
                     )
                     UnderlinedTextField(
                         value = otherOption.value,
-                        onValueChange = { otherOption.value = it },
+                        onValueChange = {
+                            if (otherOption.value == selectedOption) {
+                                onOptionSelected(it)
+                            }
+
+                            otherOption.value = it
+                        },
                         textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
                         modifier = Modifier.width(120.dp)
                     )
@@ -464,11 +488,154 @@ fun MultipleChoiceFormInputField(
                                 newSelection.add(otherOption.value)
 
                                 onSelectionChange(newSelection.toTypedArray())
+                            } else {
+                                otherOption.value = it
                             }
                         },
                         textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
                         modifier = Modifier.width(120.dp)
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SimpleDatePickerDialog(
+    isDatePickerVisible: Boolean,
+    onDialogVisibilityChanged: (Boolean) -> Unit = {},
+    onDismissRequest: () -> Unit = {},
+    onDateSelected: (String) -> Unit = {}
+) {
+    val current = LocalDateTime.now()
+
+    val year = remember { mutableIntStateOf(current.year) }
+    val month = remember { mutableIntStateOf(current.monthValue) }
+    val day = remember { mutableIntStateOf(current.dayOfMonth) }
+    val hour = remember { mutableIntStateOf(current.hour) }
+
+    if (isDatePickerVisible) {
+        Dialog(
+            onDismissRequest = {
+                onDismissRequest()
+                onDialogVisibilityChanged(false)
+            }
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.extraLarge,
+                color = Color.White
+            ) {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    SubRegionWithTitle("选择日期") {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            UnderlinedTextField(
+                                value = year.intValue.let {
+                                    if (it == -1) "" else it.toString()
+                                },
+                                onValueChange = {
+                                    year.intValue = it.toIntOrNull() ?: -1
+                                },
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(textAlign = TextAlign.Center),
+                                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.width(60.dp)
+                            )
+                            Text(
+                                text = "年",
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            UnderlinedTextField(
+                                value = month.intValue.let {
+                                    if (it == -1) "" else it.toString()
+                                },
+                                onValueChange = {
+                                    month.intValue = it.toIntOrNull() ?: -1
+                                },
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(textAlign = TextAlign.Center),
+                                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.width(30.dp)
+                            )
+                            Text(
+                                text = "月",
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            UnderlinedTextField(
+                                value = day.intValue.let {
+                                    if (it == -1) "" else it.toString()
+                                },
+                                onValueChange = {
+                                    day.intValue = it.toIntOrNull() ?: -1
+                                },
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(textAlign = TextAlign.Center),
+                                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.width(30.dp)
+                            )
+                            Text(
+                                text = "日",
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            UnderlinedTextField(
+                                value = hour.intValue.let {
+                                    if (it <= -1 || it >= 24) "" else it.toString()
+                                },
+                                onValueChange = {
+                                    hour.intValue = it.toIntOrNull() ?: -1
+                                },
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(textAlign = TextAlign.Center),
+                                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.width(30.dp)
+                            )
+                            Text(
+                                text = "时",
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Button(
+                            onClick = {
+                                onDismissRequest()
+                                onDialogVisibilityChanged(false)
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Red,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "取消"
+                            )
+                            Text("取消")
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                onDateSelected(
+                                    "${year.intValue}年${month.intValue}月${day.intValue}日${hour.intValue}时"
+                                )
+                                onDialogVisibilityChanged(false)
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Blue,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "确定"
+                            )
+                            Text("确定")
+                        }
+                    }
                 }
             }
         }
@@ -482,10 +649,38 @@ fun DateChooseFormInputField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDatePickerVisible = remember { mutableStateOf(false) }
+
     FormRow(label = label, modifier = modifier) {
         UnderlinedTextField(
             value = value ?: "",
             onValueChange = onValueChange,
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            "选择日期",
+            modifier = Modifier
+                .clickable {
+                    isDatePickerVisible.value = true
+                }
+                .weight(0.5f),
+            color = Color.Blue,
+            style = MaterialTheme.typography.bodyMedium,
+            textDecoration = TextDecoration.Underline
+        )
+    }
+
+    if (isDatePickerVisible.value) {
+        SimpleDatePickerDialog(
+            isDatePickerVisible = isDatePickerVisible.value,
+            onDialogVisibilityChanged = {
+                isDatePickerVisible.value = it
+            },
+            onDismissRequest = {
+                isDatePickerVisible.value = false
+            },
+            onDateSelected = onValueChange
         )
     }
 }
@@ -822,6 +1017,12 @@ fun FullScreenScrollableColumn(content: @Composable () -> Unit) {
     }
 }
 
+fun generatePersonnelArrivalTimeString(): String? {
+    val currentTime = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日HH时")
+    return currentTime.format(formatter)
+}
+
 @Composable
 fun BasePersonnelInfo(
     personnelTicketInfo: PersonnelTicket,
@@ -845,7 +1046,10 @@ fun BasePersonnelInfo(
                 ExpandableQRScanner { qrData ->
                     try {
                         onPersonnelInfoChange(
-                            personnelTicketInfo.copy(personnel = Json.decodeFromString<Personnel>(qrData))
+                            personnelTicketInfo.copy(
+                                personnel = Json.decodeFromString<Personnel>(qrData),
+                                arriveTime = generatePersonnelArrivalTimeString()
+                            )
                         )
                     } catch (e: Exception) {
                         println(e.toString())
@@ -1186,6 +1390,123 @@ fun CounteractDetailInfo(
                     )
                 },
                 enableOtherOption = true
+            )
+        }
+    }
+}
+
+@Composable
+fun EvacuateDetailInfo(
+    personnelTicketInfo: PersonnelTicket,
+    onPersonnelInfoChange: (PersonnelTicket) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+            .padding(
+                start = 16.dp,
+                end = 16.dp,
+                top = 4.dp,
+                bottom = 0.dp
+            )
+    ) {
+        BoxWithTitleAndBorder("后送") {
+            SubRegionWithTitle("时间") {
+                DateChooseFormInputField(
+                    "于",
+                    value = personnelTicketInfo.evacuateTime,
+                    onValueChange = {
+                        onPersonnelInfoChange(
+                            personnelTicketInfo.copy(
+                                evacuateTime = it
+                            )
+                        )
+                    }
+                )
+                StringFormInputField(
+                    "送往",
+                    value = personnelTicketInfo.evacuateDestination,
+                    onValueChange = {
+                        onPersonnelInfoChange(
+                            personnelTicketInfo.copy(
+                                evacuateDestination = it
+                            )
+                        )
+                    }
+                )
+            }
+            SingleChoiceFormInputField(
+                "方式",
+                options = listOf(
+                    "步行", "担架", "汽车", "救护车",
+                    "直升机", "船", "回程汽车"
+                ),
+                selectedOption = personnelTicketInfo.evacuateVehicle,
+                onOptionSelected = {
+                    onPersonnelInfoChange(
+                        personnelTicketInfo.copy(
+                            evacuateVehicle = it
+                        )
+                    )
+                },
+                enableOtherOption = true
+            )
+            SingleChoiceFormInputField(
+                "体位",
+                options = listOf("坐", "半卧", "卧", "侧卧(左右)"),
+                selectedOption = personnelTicketInfo.restingPosition,
+                onOptionSelected = {
+                    onPersonnelInfoChange(
+                        personnelTicketInfo.copy(
+                            restingPosition = it
+                        )
+                    )
+                },
+                enableOtherOption = true
+            )
+        }
+    }
+}
+
+@Composable
+fun SurgeonDetailInfo(
+    personnelTicketInfo: PersonnelTicket,
+    onPersonnelInfoChange: (PersonnelTicket) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+            .padding(
+                start = 16.dp,
+                end = 16.dp,
+                top = 4.dp,
+                bottom = 0.dp
+            )
+    ) {
+        BoxWithTitleAndBorder("填写者信息") {
+            StringFormInputField(
+                "军医",
+                value = personnelTicketInfo.surgeon,
+                onValueChange = {
+                    onPersonnelInfoChange(
+                        personnelTicketInfo.copy(
+                            surgeon = it
+                        )
+                    )
+                }
+            )
+            StringFormInputField(
+                "填表部门",
+                value = personnelTicketInfo.fillDepartment,
+                onValueChange = {
+                    onPersonnelInfoChange(
+                        personnelTicketInfo.copy(
+                            fillDepartment = it
+                        )
+                    )
+                }
             )
         }
     }
