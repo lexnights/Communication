@@ -925,48 +925,62 @@ fun PainkillerDosageInputField(
 }
 
 @Composable
-fun ExpandableQRScanner(modifier: Modifier = Modifier, onScanCompleted: (String) -> Unit) {
-    val qrScanned = remember { mutableStateOf(true) }
-    if (qrScanned.value) {
-        Button(
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Blue,
-                contentColor = Color.White
-            ),
-            onClick = {
-                qrScanned.value = false
-            }) {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = ""
-            )
-            Text("扫码导入人员数据")
-        }
-    } else {
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+fun ExpandableQRScanner(
+    isQRScannerVisible: Boolean,
+    onQRScannerVisibilityChanged: (Boolean) -> Unit = {},
+    onScanCompleted: (String) -> Unit
+) {
+    Button(
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.Blue,
+            contentColor = Color.White
+        ),
+        onClick = {
+            onQRScannerVisibilityChanged(true)
+        }) {
+        Icon(
+            imageVector = Icons.Filled.Add,
+            contentDescription = ""
+        )
+        Text("扫码导入人员数据")
+    }
+
+    if (isQRScannerVisible) {
+        Dialog(onDismissRequest = {
+                onQRScannerVisibilityChanged(false)
+            },
         ) {
-            QRCodeReader { qrData ->
-                onScanCompleted(qrData)
-                qrScanned.value = true
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Red,
-                    contentColor = Color.White
-                ),
-                onClick = {
-                    qrScanned.value = true
-                }) {
-                Icon(
-                    imageVector = Icons.Filled.Close,
-                    contentDescription = ""
-                )
-                Text(text = "取消")
+            Surface(
+                shape = MaterialTheme.shapes.extraLarge,
+                color = Color.White
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    QRCodeReader { qrData ->
+                        onScanCompleted(qrData)
+                        onQRScannerVisibilityChanged(false)
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Red,
+                            contentColor = Color.White
+                        ),
+                        onClick = {
+                            onQRScannerVisibilityChanged(false)
+                        }) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = ""
+                        )
+                        Text(text = "取消")
+                    }
+                }
             }
         }
     }
@@ -1043,7 +1057,11 @@ fun BasePersonnelInfo(
     ) {
         BoxWithTitleAndBorder("基本信息") {
             ExpandableWrapControl(title = "人员数据", initiallyExpanded = true) {
-                ExpandableQRScanner { qrData ->
+                val isQRScannerVisible = remember { mutableStateOf(false) }
+                ExpandableQRScanner(
+                    isQRScannerVisible = isQRScannerVisible.value,
+                    onQRScannerVisibilityChanged = { isQRScannerVisible.value = it }
+                ) { qrData ->
                     try {
                         onPersonnelInfoChange(
                             personnelTicketInfo.copy(
@@ -1551,7 +1569,7 @@ fun ExpandableWrapControl(
 fun QRCodeReader(onScanCompleted : (String) -> Unit) {
     Box(
         modifier = Modifier
-            .size(300.dp)
+            .size(270.dp)
             .clip(RoundedCornerShape(8.dp))
     ) {
         ScannerWithPermissions(
