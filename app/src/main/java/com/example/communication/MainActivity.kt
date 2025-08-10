@@ -1,5 +1,6 @@
 package com.example.communication
 
+import android.app.Activity
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -47,6 +48,7 @@ import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -62,6 +64,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -70,6 +73,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.example.communication.ui.theme.CommunicationTheme
 import com.jakewharton.threetenabp.AndroidThreeTen
 import kotlinx.coroutines.Job
@@ -93,64 +99,94 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             CommunicationTheme {
-                //QRCodeReaderWrapper()
-                var personnelTicketInfo by remember { mutableStateOf(PersonnelTicket()) }
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    FullScreenScrollableColumn(
-                        modifier = Modifier.weight(12f)
-                    ) {
-                        BasePersonnelInfo(
-                            personnelTicketInfo = personnelTicketInfo,
-                            onPersonnelInfoChange = {
-                                personnelTicketInfo = it
-                            }
-                        )
-                        InjureDetailInfo(
-                            personnelTicketInfo = personnelTicketInfo,
-                            onPersonnelInfoChange = {
-                                personnelTicketInfo = it
-                            }
-                        )
-                        CounteractDetailInfo(
-                            personnelTicketInfo = personnelTicketInfo,
-                            onPersonnelInfoChange = {
-                                personnelTicketInfo = it
-                            }
-                        )
-                        EvacuateDetailInfo(
-                            personnelTicketInfo = personnelTicketInfo,
-                            onPersonnelInfoChange = {
-                                personnelTicketInfo = it
-                            }
-                        )
-                        SurgeonDetailInfo(
-                            personnelTicketInfo = personnelTicketInfo,
-                            onPersonnelInfoChange = {
-                                personnelTicketInfo = it
-                            }
-                        )
-                        Text("Debug:$personnelTicketInfo")
-                    }
-                    LongPressProgressBarButton(
-                        "长按上传数据",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        longPressDuration = Duration.ofMillis(1200),
-                        onLongPressCompleted = {
-                            // todo: 在这写上传逻辑
-                            Toast.makeText(
-                                applicationContext,
-                                "上传成功",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    )
+                FullScreen {
+                    MainScreen()
                 }
             }
         }
+    }
+}
+
+@Composable
+fun FullScreen(content: @Composable () -> Unit) {
+    val view = LocalView.current
+    val window = (view.context as? Activity)?.window
+
+    if (window != null) {
+        SideEffect {
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            WindowInsetsControllerCompat(window, window.decorView).let { controllerCompat ->
+                controllerCompat.hide(WindowInsetsCompat.Type.systemBars())
+                controllerCompat.systemBarsBehavior =
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        }
+    }
+    content()
+}
+
+@Composable
+fun MainScreen() {
+    val ctx = LocalContext.current
+    var personnelTicketInfo by remember { mutableStateOf(PersonnelTicket()) }
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        PageHeaderBlock(
+            label = "电子伤票系统",
+            modifier = Modifier.fillMaxWidth().weight(1.5f)
+        )
+        FullScreenScrollableColumn(
+            modifier = Modifier.weight(22.5f)
+        ) {
+            BasePersonnelInfo(
+                personnelTicketInfo = personnelTicketInfo,
+                onPersonnelInfoChange = {
+                    personnelTicketInfo = it
+                }
+            )
+            InjureDetailInfo(
+                personnelTicketInfo = personnelTicketInfo,
+                onPersonnelInfoChange = {
+                    personnelTicketInfo = it
+                }
+            )
+            CounteractDetailInfo(
+                personnelTicketInfo = personnelTicketInfo,
+                onPersonnelInfoChange = {
+                    personnelTicketInfo = it
+                }
+            )
+            EvacuateDetailInfo(
+                personnelTicketInfo = personnelTicketInfo,
+                onPersonnelInfoChange = {
+                    personnelTicketInfo = it
+                }
+            )
+            SurgeonDetailInfo(
+                personnelTicketInfo = personnelTicketInfo,
+                onPersonnelInfoChange = {
+                    personnelTicketInfo = it
+                }
+            )
+            Text("Debug:$personnelTicketInfo")
+        }
+        LongPressProgressBarButton(
+            "长按上传数据",
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(2f),
+            longPressDuration = Duration.ofMillis(1200),
+            onLongPressCompleted = {
+                // todo: 在这写上传逻辑
+                Toast.makeText(
+                    ctx,
+                    "上传成功",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        )
     }
 }
 
@@ -1076,7 +1112,7 @@ fun LongPressProgressBarButton(
 ) {
     var progress by remember { mutableFloatStateOf(0f) }
 
-    val corotineScope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
     val longPressJob = remember { mutableStateOf<Job?>(null) }
 
     val longPressColor = Color(0xFF6200EE)
@@ -1099,7 +1135,7 @@ fun LongPressProgressBarButton(
            .pointerInput(Unit) {
                detectTapGestures(
                    onPress = {
-                       longPressJob.value = corotineScope.launch {
+                       longPressJob.value = coroutineScope.launch {
                            val startTime = System.currentTimeMillis()
                            while (isActive && progress < 1f) {
                                val elapsed = System.currentTimeMillis() - startTime
@@ -1134,6 +1170,37 @@ fun LongPressProgressBarButton(
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.bodyLarge
         )
+    }
+}
+
+@Composable
+fun PageHeaderBlock(
+    label: String,
+    modifier: Modifier = Modifier,
+    contents: @Composable () -> Unit = {}
+) {
+    Box(
+        modifier = modifier
+            .drawBehind {
+                drawRect(
+                    color = Color(0xFF6200EE),
+                    size = size
+                )
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White
+            )
+            contents()
+        }
     }
 }
 
