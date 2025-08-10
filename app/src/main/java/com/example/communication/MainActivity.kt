@@ -1,5 +1,6 @@
 package com.example.communication
 
+import android.app.Activity
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -9,6 +10,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,29 +48,45 @@ import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.example.communication.ui.theme.CommunicationTheme
 import com.jakewharton.threetenabp.AndroidThreeTen
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.publicvalue.multiplatform.qrcode.CameraPosition
 import org.publicvalue.multiplatform.qrcode.CodeType
 import org.publicvalue.multiplatform.qrcode.ScannerWithPermissions
+import org.threeten.bp.Duration
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.format.DateTimeFormatter
 
@@ -81,43 +99,94 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             CommunicationTheme {
-                //QRCodeReaderWrapper()
-                var personnelTicketInfo by remember { mutableStateOf(PersonnelTicket()) }
-                FullScreenScrollableColumn {
-                    BasePersonnelInfo(
-                        personnelTicketInfo = personnelTicketInfo,
-                        onPersonnelInfoChange = {
-                            personnelTicketInfo = it
-                        }
-                    )
-                    InjureDetailInfo(
-                        personnelTicketInfo = personnelTicketInfo,
-                        onPersonnelInfoChange = {
-                            personnelTicketInfo = it
-                        }
-                    )
-                    CounteractDetailInfo(
-                        personnelTicketInfo = personnelTicketInfo,
-                        onPersonnelInfoChange = {
-                            personnelTicketInfo = it
-                        }
-                    )
-                    EvacuateDetailInfo(
-                        personnelTicketInfo = personnelTicketInfo,
-                        onPersonnelInfoChange = {
-                            personnelTicketInfo = it
-                        }
-                    )
-                    SurgeonDetailInfo(
-                        personnelTicketInfo = personnelTicketInfo,
-                        onPersonnelInfoChange = {
-                            personnelTicketInfo = it
-                        }
-                    )
-                    Text("Debug:$personnelTicketInfo")
+                FullScreen {
+                    MainScreen()
                 }
             }
         }
+    }
+}
+
+@Composable
+fun FullScreen(content: @Composable () -> Unit) {
+    val view = LocalView.current
+    val window = (view.context as? Activity)?.window
+
+    if (window != null) {
+        SideEffect {
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            WindowInsetsControllerCompat(window, window.decorView).let { controllerCompat ->
+                controllerCompat.hide(WindowInsetsCompat.Type.systemBars())
+                controllerCompat.systemBarsBehavior =
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        }
+    }
+    content()
+}
+
+@Composable
+fun MainScreen() {
+    val ctx = LocalContext.current
+    var personnelTicketInfo by remember { mutableStateOf(PersonnelTicket()) }
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        PageHeaderBlock(
+            label = "电子伤票系统",
+            modifier = Modifier.fillMaxWidth().weight(1.5f)
+        )
+        FullScreenScrollableColumn(
+            modifier = Modifier.weight(22.5f)
+        ) {
+            BasePersonnelInfo(
+                personnelTicketInfo = personnelTicketInfo,
+                onPersonnelInfoChange = {
+                    personnelTicketInfo = it
+                }
+            )
+            InjureDetailInfo(
+                personnelTicketInfo = personnelTicketInfo,
+                onPersonnelInfoChange = {
+                    personnelTicketInfo = it
+                }
+            )
+            CounteractDetailInfo(
+                personnelTicketInfo = personnelTicketInfo,
+                onPersonnelInfoChange = {
+                    personnelTicketInfo = it
+                }
+            )
+            EvacuateDetailInfo(
+                personnelTicketInfo = personnelTicketInfo,
+                onPersonnelInfoChange = {
+                    personnelTicketInfo = it
+                }
+            )
+            SurgeonDetailInfo(
+                personnelTicketInfo = personnelTicketInfo,
+                onPersonnelInfoChange = {
+                    personnelTicketInfo = it
+                }
+            )
+            Text("Debug:$personnelTicketInfo")
+        }
+        LongPressProgressBarButton(
+            "长按上传数据",
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(2f),
+            longPressDuration = Duration.ofMillis(1200),
+            onLongPressCompleted = {
+                // todo: 在这写上传逻辑
+                Toast.makeText(
+                    ctx,
+                    "上传成功",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        )
     }
 }
 
@@ -1021,13 +1090,117 @@ fun SubRegionWithTitle(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-fun FullScreenScrollableColumn(content: @Composable () -> Unit) {
+fun FullScreenScrollableColumn(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
         content()
+    }
+}
+
+@Composable
+fun LongPressProgressBarButton(
+    label: String,
+    modifier: Modifier = Modifier,
+    longPressDuration: Duration = Duration.ofSeconds(5),
+    onLongPressCompleted: () -> Unit
+) {
+    var progress by remember { mutableFloatStateOf(0f) }
+
+    val coroutineScope = rememberCoroutineScope()
+    val longPressJob = remember { mutableStateOf<Job?>(null) }
+
+    val longPressColor = Color(0xFF6200EE)
+    val longPressBackGroundColor = Color.LightGray
+
+    Box(
+       modifier = modifier
+           .drawBehind {
+               drawRect(
+                   longPressBackGroundColor,
+                   size = size
+               )
+               if (longPressJob.value != null && longPressJob.value!!.isActive) {
+                   drawRect(
+                       longPressColor,
+                       size = Size(size.width * progress, size.height)
+                   )
+               }
+           }
+           .pointerInput(Unit) {
+               detectTapGestures(
+                   onPress = {
+                       longPressJob.value = coroutineScope.launch {
+                           val startTime = System.currentTimeMillis()
+                           while (isActive && progress < 1f) {
+                               val elapsed = System.currentTimeMillis() - startTime
+                               progress = elapsed.toFloat() / longPressDuration.toMillis()
+                               delay(16)
+                           }
+
+                           if (progress >= 1f) {
+                               onLongPressCompleted()
+                               progress = 0f
+                           }
+                       }
+
+                       try {
+                           awaitRelease()
+                       } catch (e: Exception) {
+                       } finally {
+                           longPressJob.value?.cancel()
+                           progress = 0f
+                       }
+                   },
+                   onTap = {
+                       // 处理点按逻辑，但暂时不需要
+                   }
+               )
+           },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.bodyLarge
+        )
+    }
+}
+
+@Composable
+fun PageHeaderBlock(
+    label: String,
+    modifier: Modifier = Modifier,
+    contents: @Composable () -> Unit = {}
+) {
+    Box(
+        modifier = modifier
+            .drawBehind {
+                drawRect(
+                    color = Color(0xFF6200EE),
+                    size = size
+                )
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White
+            )
+            contents()
+        }
     }
 }
 
@@ -1584,7 +1757,11 @@ fun QRCodeReader(onScanCompleted : (String) -> Unit) {
             types = listOf(CodeType.QR),
             cameraPosition = CameraPosition.BACK,
             permissionDeniedContent = {
-                Text("Permission denied")
+                Toast.makeText(
+                    LocalContext.current,
+                    "相机被禁用！请更改设置允许应用访问相机权限",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         )
     }
