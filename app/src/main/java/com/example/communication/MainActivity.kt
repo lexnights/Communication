@@ -9,6 +9,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,17 +48,23 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -65,10 +72,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.communication.ui.theme.CommunicationTheme
 import com.jakewharton.threetenabp.AndroidThreeTen
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.publicvalue.multiplatform.qrcode.CameraPosition
 import org.publicvalue.multiplatform.qrcode.CodeType
 import org.publicvalue.multiplatform.qrcode.ScannerWithPermissions
+import org.threeten.bp.Duration
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.format.DateTimeFormatter
 
@@ -83,38 +95,59 @@ class MainActivity : ComponentActivity() {
             CommunicationTheme {
                 //QRCodeReaderWrapper()
                 var personnelTicketInfo by remember { mutableStateOf(PersonnelTicket()) }
-                FullScreenScrollableColumn {
-                    BasePersonnelInfo(
-                        personnelTicketInfo = personnelTicketInfo,
-                        onPersonnelInfoChange = {
-                            personnelTicketInfo = it
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    FullScreenScrollableColumn(
+                        modifier = Modifier.weight(12f)
+                    ) {
+                        BasePersonnelInfo(
+                            personnelTicketInfo = personnelTicketInfo,
+                            onPersonnelInfoChange = {
+                                personnelTicketInfo = it
+                            }
+                        )
+                        InjureDetailInfo(
+                            personnelTicketInfo = personnelTicketInfo,
+                            onPersonnelInfoChange = {
+                                personnelTicketInfo = it
+                            }
+                        )
+                        CounteractDetailInfo(
+                            personnelTicketInfo = personnelTicketInfo,
+                            onPersonnelInfoChange = {
+                                personnelTicketInfo = it
+                            }
+                        )
+                        EvacuateDetailInfo(
+                            personnelTicketInfo = personnelTicketInfo,
+                            onPersonnelInfoChange = {
+                                personnelTicketInfo = it
+                            }
+                        )
+                        SurgeonDetailInfo(
+                            personnelTicketInfo = personnelTicketInfo,
+                            onPersonnelInfoChange = {
+                                personnelTicketInfo = it
+                            }
+                        )
+                        Text("Debug:$personnelTicketInfo")
+                    }
+                    LongPressProgressBarButton(
+                        "长按上传数据",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        longPressDuration = Duration.ofMillis(1200),
+                        onLongPressCompleted = {
+                            // todo: 在这写上传逻辑
+                            Toast.makeText(
+                                applicationContext,
+                                "上传成功",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     )
-                    InjureDetailInfo(
-                        personnelTicketInfo = personnelTicketInfo,
-                        onPersonnelInfoChange = {
-                            personnelTicketInfo = it
-                        }
-                    )
-                    CounteractDetailInfo(
-                        personnelTicketInfo = personnelTicketInfo,
-                        onPersonnelInfoChange = {
-                            personnelTicketInfo = it
-                        }
-                    )
-                    EvacuateDetailInfo(
-                        personnelTicketInfo = personnelTicketInfo,
-                        onPersonnelInfoChange = {
-                            personnelTicketInfo = it
-                        }
-                    )
-                    SurgeonDetailInfo(
-                        personnelTicketInfo = personnelTicketInfo,
-                        onPersonnelInfoChange = {
-                            personnelTicketInfo = it
-                        }
-                    )
-                    Text("Debug:$personnelTicketInfo")
                 }
             }
         }
@@ -1021,13 +1054,86 @@ fun SubRegionWithTitle(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-fun FullScreenScrollableColumn(content: @Composable () -> Unit) {
+fun FullScreenScrollableColumn(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
         content()
+    }
+}
+
+@Composable
+fun LongPressProgressBarButton(
+    label: String,
+    modifier: Modifier = Modifier,
+    longPressDuration: Duration = Duration.ofSeconds(5),
+    onLongPressCompleted: () -> Unit
+) {
+    var progress by remember { mutableFloatStateOf(0f) }
+
+    val corotineScope = rememberCoroutineScope()
+    val longPressJob = remember { mutableStateOf<Job?>(null) }
+
+    val longPressColor = Color(0xFF6200EE)
+    val longPressBackGroundColor = Color.LightGray
+
+    Box(
+       modifier = modifier
+           .drawBehind {
+               drawRect(
+                   longPressBackGroundColor,
+                   size = size
+               )
+               if (longPressJob.value != null && longPressJob.value!!.isActive) {
+                   drawRect(
+                       longPressColor,
+                       size = Size(size.width * progress, size.height)
+                   )
+               }
+           }
+           .pointerInput(Unit) {
+               detectTapGestures(
+                   onPress = {
+                       longPressJob.value = corotineScope.launch {
+                           val startTime = System.currentTimeMillis()
+                           while (isActive && progress < 1f) {
+                               val elapsed = System.currentTimeMillis() - startTime
+                               progress = elapsed.toFloat() / longPressDuration.toMillis()
+                               delay(16)
+                           }
+
+                           if (progress >= 1f) {
+                               onLongPressCompleted()
+                               progress = 0f
+                           }
+                       }
+
+                       try {
+                           awaitRelease()
+                       } catch (e: Exception) {
+                       } finally {
+                           longPressJob.value?.cancel()
+                           progress = 0f
+                       }
+                   },
+                   onTap = {
+                       // 处理点按逻辑，但暂时不需要
+                   }
+               )
+           },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.bodyLarge
+        )
     }
 }
 
@@ -1584,7 +1690,11 @@ fun QRCodeReader(onScanCompleted : (String) -> Unit) {
             types = listOf(CodeType.QR),
             cameraPosition = CameraPosition.BACK,
             permissionDeniedContent = {
-                Text("Permission denied")
+                Toast.makeText(
+                    LocalContext.current,
+                    "相机被禁用！请更改设置允许应用访问相机权限",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         )
     }
