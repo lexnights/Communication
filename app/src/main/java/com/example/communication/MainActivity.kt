@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -145,7 +146,9 @@ fun MainScreen() {
     ) {
         PageHeaderBlock(
             label = "电子伤票系统",
-            modifier = Modifier.fillMaxWidth().weight(1.5f)
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1.5f)
         )
         FullScreenScrollableColumn(
             modifier = Modifier.weight(22.5f)
@@ -262,10 +265,10 @@ fun NumberFormInputField(
     FormRow(label = label, modifier = modifier) {
         UnderlinedTextField(
             value = value.let {
-                if (it == 0) "" else it.toString()
+                if (it == -1) "" else it.toString()
             },
             onValueChange = {
-                onValueChange(it.toIntOrNull() ?: 0)
+                onValueChange(it.toIntOrNull() ?: -1)
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.weight(1f)
@@ -887,20 +890,22 @@ fun TransfusionDosageInputField(
                 onTransfusionChange(Pair(newBloodType, dosage))
             },
             textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
-            modifier = Modifier.width(30.dp)
+            modifier = Modifier.width(100.dp)
         )
         Text(
             text = "），",
             style = MaterialTheme.typography.bodyMedium
         )
         UnderlinedTextField(
-            value = dosage.toString(),
+            value = dosage.let {
+                if (it == -1) "" else it.toString()
+            },
             onValueChange = { newDosage ->
-                onTransfusionChange(Pair(bloodType, newDosage.toIntOrNull() ?: 0))
+                onTransfusionChange(Pair(bloodType, newDosage.toIntOrNull() ?: -1))
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
-            modifier = Modifier.width(100.dp)
+            modifier = Modifier.width(50.dp)
         )
         Text(
             text = "毫升",
@@ -921,34 +926,52 @@ fun InjectionDosageInputField(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "输液  名称",
+            text = "输液",
             style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f)
         )
-        UnderlinedTextField(
-            value = drugName,
-            onValueChange = { newDrugName ->
-                onInjectionChange(Pair(newDrugName, dosage))
-            },
-            textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
-            modifier = Modifier.width(50.dp)
-        )
-        Text(
-            text = "剂量",
-            style = MaterialTheme.typography.bodyMedium
-        )
-        UnderlinedTextField(
-            value = dosage.toString(),
-            onValueChange = { newDosage ->
-                onInjectionChange(Pair(drugName, newDosage.toIntOrNull() ?: 0))
-            },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
-            modifier = Modifier.width(50.dp)
-        )
-        Text(
-            text = "毫升",
-            style = MaterialTheme.typography.bodyMedium
-        )
+        Column(
+            modifier = Modifier.weight(6f),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Row(
+                modifier = modifier,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "名称",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                UnderlinedTextField(
+                    value = drugName,
+                    onValueChange = { newDrugName ->
+                        onInjectionChange(Pair(newDrugName, dosage))
+                    },
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+                    modifier = Modifier.width(100.dp)
+                )
+                Text(
+                    text = "剂量",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                UnderlinedTextField(
+                    value = dosage.let {
+                        if (it == -1) "" else it.toString()
+                    },
+                    onValueChange = { newDosage ->
+                        onInjectionChange(Pair(drugName, newDosage.toIntOrNull() ?: -1))
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+                    modifier = Modifier.width(50.dp)
+                )
+                Text(
+                    text = "毫升",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
     }
 }
 
@@ -964,42 +987,94 @@ fun PainkillerDosageInputField(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "止痛  药名",
+            text = "止痛",
             style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f)
         )
-        UnderlinedTextField(
-            value = painkillerName,
-            onValueChange = { newPainkillerName ->
-                onPainkillerChange(Triple(newPainkillerName, dosage, time))
-            },
-            textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
-            modifier = Modifier.width(50.dp)
-        )
-        Text(
-            text = "剂量",
-            style = MaterialTheme.typography.bodyMedium
-        )
-        UnderlinedTextField(
-            value = dosage.toString(),
-            onValueChange = { newDosage ->
-                onPainkillerChange(Triple(painkillerName, newDosage.toIntOrNull() ?: 0, time))
-            },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
-            modifier = Modifier.width(50.dp)
-        )
-        Text(
-            text = "时间",
-            style = MaterialTheme.typography.bodyMedium
-        )
-        UnderlinedTextField(
-            value = time,
-            onValueChange = { newTime ->
-                onPainkillerChange(Triple(painkillerName, dosage, newTime))
-            },
-            textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
-            modifier = Modifier.width(50.dp)
-        )
+        Column(
+            modifier = Modifier.weight(6f),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "药名",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                UnderlinedTextField(
+                    value = painkillerName,
+                    onValueChange = { newPainkillerName ->
+                        onPainkillerChange(Triple(newPainkillerName, dosage, time))
+                    },
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+                    modifier = Modifier.width(100.dp)
+                )
+                Text(
+                    text = "剂量",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                UnderlinedTextField(
+                    value = dosage.let {
+                        if (it == -1) "" else it.toString()
+                    },
+                    onValueChange = { newDosage ->
+                        onPainkillerChange(Triple(painkillerName, newDosage.toIntOrNull() ?: -1, time))
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+                    modifier = Modifier.width(50.dp)
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val isDatePickerVisible = remember { mutableStateOf(false) }
+
+                // 直接内联时间选择器了
+                Text(
+                    text = "时间",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                UnderlinedTextField(
+                    value = time,
+                    onValueChange = {
+                        onPainkillerChange(Triple(painkillerName, dosage, it))
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    "选择日期",
+                    modifier = Modifier
+                        .clickable {
+                            isDatePickerVisible.value = true
+                        }
+                        .weight(0.5f),
+                    color = Color.Blue,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textDecoration = TextDecoration.Underline
+                )
+
+                if (isDatePickerVisible.value) {
+                    SimpleDatePickerDialog(
+                        isDatePickerVisible = isDatePickerVisible.value,
+                        onDialogVisibilityChanged = {
+                            isDatePickerVisible.value = it
+                        },
+                        onDismissRequest = {
+                            isDatePickerVisible.value = false
+                        },
+                        onDateSelected = {
+                            onPainkillerChange(Triple(painkillerName, dosage, it))
+                        }
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -1200,7 +1275,9 @@ fun PageHeaderBlock(
         contentAlignment = Alignment.Center
     ) {
         Row(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
