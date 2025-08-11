@@ -8,6 +8,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -60,8 +67,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -1737,6 +1747,68 @@ fun ExpandableWrapControl(
     }
 }
 
+@Composable
+fun QRCodeReaderIndicator() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        val infiniteTransition = rememberInfiniteTransition()
+        val animationPosition by infiniteTransition.animateFloat(
+            initialValue = 0.04f,
+            targetValue = 0.96f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(1600, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse
+            )
+        )
+
+        Canvas(
+            modifier = Modifier
+                .size(200.dp)
+        ) {
+            val canvasSize = size
+            val cornerLength = 40.dp.toPx()
+            val strokeWidth = 5.dp.toPx()
+            val color = Color.White
+
+            val path = Path()
+
+            path.moveTo(0f, cornerLength)
+            path.lineTo(0f, 0f)
+            path.lineTo(cornerLength, 0f)
+
+            path.moveTo(canvasSize.width - cornerLength, 0f)
+            path.lineTo(canvasSize.width, 0f)
+            path.lineTo(canvasSize.width, cornerLength)
+
+            path.moveTo(canvasSize.width, canvasSize.height - cornerLength)
+            path.lineTo(canvasSize.width, canvasSize.height)
+            path.lineTo(canvasSize.width - cornerLength, canvasSize.height)
+
+            path.moveTo(cornerLength, canvasSize.height)
+            path.lineTo(0f, canvasSize.height)
+            path.lineTo(0f, canvasSize.height - cornerLength)
+
+            drawPath(
+                path = path,
+                color = color,
+                style = Stroke(width = strokeWidth)
+            )
+
+            // 扫描线的动画
+            val scannerY = canvasSize.height * animationPosition
+            drawLine(
+                color = Color.Cyan,
+                start = Offset(canvasSize.width * 0.04f, scannerY),
+                end = Offset(canvasSize.width * 0.96f, scannerY),
+                strokeWidth = 3.dp.toPx()
+            )
+        }
+    }
+}
 
 @Composable
 fun QRCodeReader(onScanCompleted : (String) -> Unit) {
@@ -1764,5 +1836,6 @@ fun QRCodeReader(onScanCompleted : (String) -> Unit) {
                 ).show()
             }
         )
+        QRCodeReaderIndicator()
     }
 }
