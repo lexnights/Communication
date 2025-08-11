@@ -34,7 +34,7 @@ data class PersonnelTicket(
 
     var toxoid: Int = 0, //破伤风类毒素
     var tetanus: Int = 0, //破伤风类抗毒素
-    var injectedDrugs: Map<String, Int>? = null, // 注射药名及剂量
+    var injectedDrugs: Map<String, String>? = null, // 注射药名及剂量
     var transfusion: Pair<String, Int>? = null, // 输血信息 (血型, 数量)
     var injection: Pair<String, Int>? = null, // 输液信息 (药名, 剂量)
     var painKillers: Triple<String, Int, String>? = null, //止痛药信息 (药名, 剂量, 时间)
