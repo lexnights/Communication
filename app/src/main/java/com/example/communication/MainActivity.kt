@@ -100,7 +100,21 @@ import org.publicvalue.multiplatform.qrcode.ScannerWithPermissions
 import org.threeten.bp.Duration
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.format.DateTimeFormatter
-
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.IOException
+import com.example.communication.net.ApiClient
+import com.example.communication.settings.SettingsDialog
+import com.example.communication.settings.SettingsStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -141,6 +155,8 @@ fun MainScreen() {
     val ctx = LocalContext.current
     var personnelTicketInfo by remember { mutableStateOf(PersonnelTicket()) }
 
+    var showSettings by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
@@ -149,7 +165,11 @@ fun MainScreen() {
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1.5f)
-        )
+        ) {
+            Button(onClick = { showSettings = true }) {
+                Text("设置", color = Color.White)
+            }
+        }
         FullScreenScrollableColumn(
             modifier = Modifier.weight(22.5f)
         ) {
@@ -192,12 +212,33 @@ fun MainScreen() {
                 .weight(2f),
             longPressDuration = Duration.ofMillis(1200),
             onLongPressCompleted = {
-                // todo: 在这写上传逻辑
-                Toast.makeText(
-                    ctx,
-                    "上传成功",
-                    Toast.LENGTH_SHORT
-                ).show()
+                ApiClient.postTicket(
+                    context = ctx,
+                    uiTicket = personnelTicketInfo,
+                    onSuccess = {
+                        (ctx as? Activity)?.runOnUiThread {
+                            Toast.makeText(ctx, "上传成功", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    onError = { e ->
+                        (ctx as? Activity)?.runOnUiThread {
+                            Toast.makeText(ctx, "上传失败: ${e.message}", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                )
+            }
+        )
+    }
+
+    if (showSettings) {
+        SettingsDialog(
+            currentHost = SettingsStore.getHost(ctx),
+            currentPort = SettingsStore.getPort(ctx),
+            onDismiss = { showSettings = false },
+            onSave = { host, port ->
+                SettingsStore.save(ctx, host, port)
+                showSettings = false
+                Toast.makeText(ctx, "已保存: ${SettingsStore.getBaseUrl(ctx)}", Toast.LENGTH_SHORT).show()
             }
         )
     }
