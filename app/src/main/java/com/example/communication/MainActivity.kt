@@ -2,7 +2,6 @@ package com.example.communication
 
 import android.app.Activity
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -105,22 +104,6 @@ import org.publicvalue.multiplatform.qrcode.ScannerWithPermissions
 import org.threeten.bp.Duration
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.format.DateTimeFormatter
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
-import org.json.JSONArray
-import org.json.JSONObject
-import java.io.IOException
-import com.example.communication.net.ApiClient
-import com.example.communication.settings.SettingsDialog
-import com.example.communication.settings.SettingsStore
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlin.printStackTrace
 import java.util.Locale
 import kotlin.Boolean
 
