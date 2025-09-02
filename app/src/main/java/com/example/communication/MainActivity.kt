@@ -16,6 +16,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -27,7 +28,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -46,6 +46,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -88,6 +89,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.example.communication.net.ApiClient
+import com.example.communication.settings.SettingsDialog
+import com.example.communication.settings.SettingsStore
 import com.example.communication.ui.theme.CommunicationTheme
 import com.jakewharton.threetenabp.AndroidThreeTen
 import kotlinx.coroutines.Job
@@ -117,6 +121,8 @@ import com.example.communication.settings.SettingsStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.printStackTrace
+import java.util.Locale
+import kotlin.Boolean
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -168,10 +174,25 @@ fun MainScreen() {
                 .fillMaxWidth()
                 .weight(1.5f)
         ) {
-            Button(onClick = { showSettings = true }) {
-                Text("设置", color = Color.White)
+            Button(
+                onClick = { showSettings = true },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = Color.White
+                ),
+                modifier = Modifier.height(36.dp)
+            ) {
+                Icon(
+                    Icons.Default.Settings,
+                    contentDescription = "Settings",
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
+        FormProgressBar(
+            personnelTicketInfo,
+            modifier = Modifier.weight(0.5f)
+        )
         FullScreenScrollableColumn(
             modifier = Modifier.weight(22.5f)
         ) {
@@ -247,16 +268,32 @@ fun MainScreen() {
 }
 
 @Composable
-fun FormRow(label: String, modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
+fun FormRow(
+    label: String,
+    modifier: Modifier = Modifier,
+    required: Boolean = false,
+    content: @Composable RowScope.() -> Unit) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = "$label：", style = MaterialTheme.typography.bodyMedium)
+        if (required) {
+            RequiredLabel(label = "$label：")
+        } else {
+            Text(text = "$label：", style = MaterialTheme.typography.bodyMedium)
+        }
         Spacer(modifier = Modifier.width(8.dp))
         content()
+    }
+}
+
+@Composable
+fun RequiredLabel(label: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(text = label, style = MaterialTheme.typography.bodyMedium)
+        Text(text = "*", color = Color.Red, style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -287,9 +324,10 @@ fun StringFormInputField(
     label: String,
     value: String?,
     onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    required: Boolean = false
 ) {
-    FormRow(label = label, modifier = modifier) {
+    FormRow(label = label, modifier = modifier, required = required) {
         UnderlinedTextField(
             value = value ?: "",
             onValueChange = onValueChange,
@@ -303,9 +341,10 @@ fun NumberFormInputField(
     label: String,
     value: Int,
     onValueChange: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    required: Boolean = false
 ) {
-    FormRow(label = label, modifier = modifier) {
+    FormRow(label = label, modifier = modifier, required = required) {
         UnderlinedTextField(
             value = value.let {
                 if (it == -1) "" else it.toString()
@@ -324,9 +363,10 @@ fun GenderChooseFormInputField(
     label: String,
     value: String?,
     onValueChange: (String?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    required: Boolean = false
 ) {
-    FormRow(label = label, modifier = modifier) {
+    FormRow(label = label, modifier = modifier, required = required) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
             RadioButton(
                 selected = value == "男",
@@ -745,7 +785,14 @@ fun SimpleDatePickerDialog(
                         Button(
                             onClick = {
                                 onDateSelected(
-                                    "${year.intValue}年${month.intValue}月${day.intValue}日${hour.intValue}时"
+                                    String.format(
+                                        Locale.CHINA,
+                                        "%04d年%02d月%02d日%02d时",
+                                        year.intValue,
+                                        month.intValue,
+                                        day.intValue,
+                                        hour.intValue
+                                    )
                                 )
                                 onDialogVisibilityChanged(false)
                             },
@@ -772,11 +819,12 @@ fun DateChooseFormInputField(
     label: String,
     value: String?,
     onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    required: Boolean = false
 ) {
     val isDatePickerVisible = remember { mutableStateOf(false) }
 
-    FormRow(label = label, modifier = modifier) {
+    FormRow(label = label, modifier = modifier, required = required) {
         UnderlinedTextField(
             value = value ?: "",
             onValueChange = onValueChange,
@@ -1319,17 +1367,63 @@ fun PageHeaderBlock(
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+                .fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.titleMedium,
-                color = Color.White
+                color = Color.White,
+                modifier = Modifier.padding(16.dp).weight(1f).fillMaxWidth()
             )
-            contents()
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.End
+            ) {
+                contents()
+            }
+        }
+    }
+}
+
+// extension method
+fun PersonnelTicket.requiredFieldsFilled(): Int {
+    var count = 0
+    if (personnel.name?.isNotBlank() ?: false) count++
+    if (personnel.gender?.isNotBlank() ?: false) count++
+    if (personnel.age > 0) count++
+    if (personnel.department?.isNotBlank() ?: false) count++
+    if (personnel.job?.isNotBlank() ?: false) count++
+    if (personnel.rank?.isNotBlank() ?: false) count++
+    if (hurtPlace?.isNotBlank() ?: false) count++
+    if (hurtTime?.isNotBlank() ?: false) count++
+    if (arriveTime?.isNotBlank() ?: false) count++
+
+    return count
+}
+
+fun PersonnelTicket.requiredFieldsTotal(): Int = 9 // 必填项总数
+
+@Composable
+fun FormProgressBar(personnelTicketInfo: PersonnelTicket, modifier: Modifier = Modifier) {
+    val filled = personnelTicketInfo.requiredFieldsFilled()
+    val total = personnelTicketInfo.requiredFieldsTotal()
+    val progress = filled.toFloat() / total
+
+    Column(modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .background(Color.LightGray)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(progress)
+                    .height(8.dp)
+                    .background(Color(0xFF4CAF50))
+            )
         }
     }
 }
@@ -1385,7 +1479,8 @@ fun BasePersonnelInfo(
                         onPersonnelInfoChange(
                             personnelTicketInfo.copy(personnel = personnelTicketInfo.personnel.copy(name = it))
                         )
-                    }
+                    },
+                    required = true
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1400,7 +1495,8 @@ fun BasePersonnelInfo(
                                 personnelTicketInfo.copy(personnel = personnelTicketInfo.personnel.copy(gender = it ?: ""))
                             )
                         },
-                        modifier = Modifier.weight(2f)
+                        modifier = Modifier.weight(2f),
+                        required = true
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     NumberFormInputField(
@@ -1411,6 +1507,7 @@ fun BasePersonnelInfo(
                                 personnelTicketInfo.copy(personnel = personnelTicketInfo.personnel.copy(age = it))
                             )
                         },
+                        required = true,
                         modifier = Modifier.weight(1f))
                 }
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1421,7 +1518,8 @@ fun BasePersonnelInfo(
                         onPersonnelInfoChange(
                             personnelTicketInfo.copy(personnel = personnelTicketInfo.personnel.copy(department = it))
                         )
-                    }
+                    },
+                    required = true
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 StringFormInputField(
@@ -1431,7 +1529,8 @@ fun BasePersonnelInfo(
                         onPersonnelInfoChange(
                             personnelTicketInfo.copy(personnel = personnelTicketInfo.personnel.copy(job = it))
                         )
-                    }
+                    },
+                    required = true
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 StringFormInputField(
@@ -1441,25 +1540,29 @@ fun BasePersonnelInfo(
                         onPersonnelInfoChange(
                             personnelTicketInfo.copy(personnel = personnelTicketInfo.personnel.copy(rank = it))
                         )
-                    }
+                    },
+                    required = true
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 StringFormInputField(
                     "负伤地点",
                     value = personnelTicketInfo.hurtPlace,
-                    onValueChange = { onPersonnelInfoChange(personnelTicketInfo.copy(hurtPlace = it)) }
+                    onValueChange = { onPersonnelInfoChange(personnelTicketInfo.copy(hurtPlace = it)) },
+                    required = true
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 DateChooseFormInputField(
                     "负伤时间",
                     value = personnelTicketInfo.hurtTime,
-                    onValueChange = { onPersonnelInfoChange(personnelTicketInfo.copy(hurtTime = it)) }
+                    onValueChange = { onPersonnelInfoChange(personnelTicketInfo.copy(hurtTime = it)) },
+                    required = true
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 DateChooseFormInputField(
                     "到达时间",
                     value = personnelTicketInfo.arriveTime,
-                    onValueChange = { onPersonnelInfoChange(personnelTicketInfo.copy(arriveTime = it)) }
+                    onValueChange = { onPersonnelInfoChange(personnelTicketInfo.copy(arriveTime = it)) },
+                    required = true
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
