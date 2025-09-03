@@ -1,11 +1,12 @@
 <network-security-config>
 
-    <base-config cleartextTrafficPermitted="false" />
+    <!--之后看情况改这个-->
+    <base-config cleartextTrafficPermitted="true" />
 
-    <domain-config cleartextTrafficPermitted="true">
+    <!--<domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="false">127.0.0.1</domain>
         <domain includeSubdomains="false">10.0.2.2</domain>
         <domain includeSubdomains="false">192.168.1.114</domain>
         <domain includeSubdomains="false">localhost</domain>
-    </domain-config>
+    </domain-config>-->
 </network-security-config>
