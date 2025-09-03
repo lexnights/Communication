@@ -21,8 +21,8 @@ object ApiClient {
         onSuccess: () -> Unit,
         onError: (Throwable) -> Unit
     ) {
-        val baseUrl = SettingsStore.getBaseUrl(context) // e.g. http://10.0.2.2:8080
-        val url = "$baseUrl/tickets"
+        val baseUrl = SettingsStore.getBaseUrl(context)
+        val url = "${baseUrl.trimEnd('/')}/tickets"
 
         val payload = uiTicket.toApi()
         val body = json.encodeToString(payload).toRequestBody(jsonMediaType)
